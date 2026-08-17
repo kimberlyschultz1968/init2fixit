@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IN IT 2 FIX IT — Your Problem. Our Mission.</title>
+<meta name="description" content="IN IT 2 FIX IT turns outdated processes into modern solutions — custom workflows, apps, portals, automation, and AI for small businesses in the Tampa Bay area.">
+<style>
+  :root{
+    --paper:#FFFFFF;
+    --paper-soft:#F5F8FC;
+    --ink:#161F31;
+    --body:#3C4658;
+    --muted:#6B7688;
+    --blue:#1E4FD6;
+    --blue-deep:#12309B;
+    --green:#245229;
+    --green-mid:#2F6B38;
+    --line:#D9E0EC;
+    --line-faint:#EBEFF6;
+    --zebra:#F3F7FD;
+    --hover:#E8F0FE;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--body);
+    font-family:"Segoe UI",Arial,"Helvetica Neue",sans-serif;
+    font-size:16px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding-left:24px;padding-right:24px}
+
+  /* chrome-metallic text, like the logo lettering */
+  .chrome-b{
+    background:linear-gradient(180deg,#8CBAFF 0%,#3D74E8 30%,#12309B 52%,#5B93F2 66%,#1E4FD6 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+  }
+  .chrome-g{
+    background:linear-gradient(180deg,#79BC86 0%,#2F6B38 38%,#16351B 54%,#4E9A5C 68%,#245229 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+  }
+  .chromeline{
+    height:2px;border:none;
+    background:linear-gradient(90deg,rgba(30,79,214,0) 0%,#9DB8E8 18%,#1E4FD6 50%,#9DB8E8 82%,rgba(30,79,214,0) 100%);
+  }
+
+  header{background:var(--paper)}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding-top:16px;padding-bottom:14px;gap:16px;flex-wrap:wrap}
+  .brandlogo{display:block;width:124px;height:auto}
+
+  /* hero */
+  .hero{padding:56px 0 60px;text-align:center;background:var(--paper)}
+  .logopic{display:block;width:740px;max-width:94%;height:auto;margin:0 auto 34px}
+  .hero h1{
+    color:var(--ink);font-size:clamp(28px,4.6vw,44px);font-weight:800;
+    letter-spacing:.01em;line-height:1.18;max-width:24ch;margin:0 auto;
+  }
+  .hero p{max-width:62ch;margin:20px auto 0;font-size:17.5px}
+  .hero .where{margin-top:14px;font-size:12.5px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+  a.btn{
+    display:inline-block;margin-top:32px;padding:14px 30px;
+    color:#fff;text-decoration:none;font-weight:800;letter-spacing:.03em;font-size:15px;
+    border-radius:6px;
+    background:linear-gradient(180deg,#6FA5F7 0%,#2F6FE8 45%,#1E4FD6 52%,#12309B 100%);
+    border:1px solid #0F2B8C;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 4px rgba(6,16,60,.3),0 3px 10px rgba(18,48,155,.28);
+    text-shadow:0 1px 2px rgba(6,16,60,.45);
+  }
+  a.btn:hover{background:linear-gradient(180deg,#83B3F9 0%,#4A85F5 45%,#2F6FE8 52%,#1E4FD6 100%)}
+  a.btn.green{
+    margin-left:12px;
+    background:linear-gradient(180deg,#57A264 0%,#2F6B38 48%,#1E4B26 55%,#16351B 100%);
+    border:1px solid #122A16;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -2px 4px rgba(8,20,10,.35),0 3px 10px rgba(22,53,27,.28);
+    text-shadow:0 1px 2px rgba(8,20,10,.5);
+  }
+  a.btn.green:hover{background:linear-gradient(180deg,#68B275 0%,#3B7C45 48%,#245229 55%,#1E4B26 100%)}
+
+  /* services — real artwork from the logo */
+  .services{padding:36px 0 32px;border-top:1px solid var(--line-faint);border-bottom:1px solid var(--line-faint);background:var(--paper)}
+  .svcpic{display:block;width:min(1000px,96%);height:auto;margin:0 auto}
+  .mottopic{display:block;width:min(820px,90%);height:auto;margin:22px auto 4px}
+
+  section{padding:64px 0}
+  section.alt{background:var(--paper-soft);border-top:1px solid var(--line-faint);border-bottom:1px solid var(--line-faint)}
+  h2{
+    color:var(--ink);font-size:15px;letter-spacing:.22em;text-transform:uppercase;
+    margin-bottom:28px;font-weight:800;
+  }
+  h2 .num{margin-right:10px;font-weight:800}
+
+  /* "sound familiar" sheet */
+  .sheet{
+    border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper);
+    box-shadow:0 1px 5px rgba(22,31,49,.07);
+  }
+  .sheet table{width:100%;border-collapse:collapse;table-layout:fixed}
+  .sheet th{
+    font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
+    color:var(--muted);text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#FAFCFE 0%,#EDF1F8 100%);
+  }
+  .sheet td{
+    padding:13px 14px;font-size:15px;color:var(--body);
+    border-bottom:1px solid var(--line-faint);vertical-align:middle;
+    overflow:hidden;text-overflow:ellipsis;
+  }
+  .sheet tr:nth-child(even) td{background:var(--zebra)}
+  .sheet tbody tr:hover td{background:var(--hover)}
+  .sheet .gut{width:44px;color:var(--muted);font-size:12px;text-align:right;
+    border-right:1px solid var(--line-faint);font-variant-numeric:tabular-nums}
+  .sheet .stat{width:112px}
+  .chip{
+    display:inline-block;padding:3px 11px;border-radius:4px;
+    font-size:10.5px;letter-spacing:.12em;font-weight:700;text-transform:uppercase;
+    color:#fff;text-shadow:0 1px 1px rgba(8,20,10,.5);
+    background:linear-gradient(180deg,#57A264 0%,#2F6B38 48%,#1E4B26 55%,#16351B 100%);
+    border:1px solid #122A16;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .after{margin-top:16px;font-size:14.5px;color:var(--muted)}
+  .after b{color:var(--green-mid);font-weight:700}
+
+  /* how it works */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .step{
+    position:relative;overflow:hidden;
+    border:1px solid var(--line);border-radius:8px;padding:30px 22px 26px;background:var(--paper);
+    box-shadow:0 1px 5px rgba(22,31,49,.06);
+  }
+  .step::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:5px;
+    background:linear-gradient(90deg,#0F2B8C 0%,#5B93F2 50%,#0F2B8C 100%);
+  }
+  .step.green::before{background:linear-gradient(90deg,#122A16 0%,#4E9A5C 50%,#122A16 100%)}
+  .step .n{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums}
+  .step h3{color:var(--ink);font-size:17.5px;margin:8px 0 8px;font-weight:700}
+  .step p{font-size:14.5px}
+  .step .free{margin-top:12px;font-size:11px;letter-spacing:.16em;color:var(--green-mid);text-transform:uppercase;font-weight:700}
+
+  /* who we help */
+  .whogrid{display:flex;flex-wrap:wrap;gap:10px}
+  .who{
+    padding:9px 16px;border:1px solid var(--line);border-radius:5px;
+    font-size:14px;color:var(--body);font-weight:600;
+    background:linear-gradient(180deg,#FFFFFF 0%,#F1F5FA 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9);
+  }
+  .whonote{margin-top:20px;font-size:15px;max-width:62ch}
+
+  /* contact */
+  .contact{
+    position:relative;overflow:hidden;text-align:center;padding:74px 0;color:#fff;
+    background:linear-gradient(160deg,#0E2878 0%,#1E4FD6 42%,#2F6FE8 55%,#12309B 100%);
+  }
+  .contact::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.16) 46%,transparent 60%);
+  }
+  .contact .wrap{position:relative}
+  .contact h2{color:#BCCDF8;margin-bottom:14px}
+  .contact .big{
+    color:#fff;font-size:clamp(22px,3.4vw,32px);font-weight:800;
+    max-width:26ch;margin:0 auto;line-height:1.3;
+    text-shadow:0 1px 3px rgba(6,16,60,.4);
+  }
+  .contact p{margin-top:16px;font-size:15.5px;color:#DCE6FB}
+  .contact a.mailbig{color:#fff;text-decoration:underline;font-size:clamp(17px,2.6vw,22px);font-weight:700}
+  .contact a.mailbig:hover{color:#CFE0FF}
+
+  footer{padding:26px 0;background:var(--paper);border-top:1px solid var(--line)}
+  footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+  footer .site{font-weight:700;letter-spacing:.08em}
+
+  @media (max-width:820px){
+    .steps{grid-template-columns:1fr}
+    .hero{padding:40px 0 44px}
+    section{padding:48px 0}
+    .sheet .stat{width:94px}
+    a.btn.green{margin-left:0}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <img class="brandlogo" src="logo-mini.webp" alt="IN IT 2 FIX IT" width="248" height="89">
+  </div>
+  <hr class="chromeline">
+</header>
+
+<main>
+  <div class="hero">
+    <div class="wrap">
+      <img class="logopic" src="logo-crop.webp" alt="IN IT 2 FIX IT — Your Problem. Our Mission." width="1480" height="615">
+      <h1>That process that drives you crazy? <span class="chrome-b">We fix it.</span></h1>
+      <p>IN IT 2 FIX IT builds simple, custom software for small businesses that are still fighting
+         spreadsheets, paper forms, whiteboards, and systems that don't talk to each other.
+         No big-company software. No year-long projects. Just your worst process, fixed.</p>
+      <div>
+        <a class="btn" href="mailto:kimberly@init2fixit.com?subject=Our%20workflow%20headache">Tell us your headache</a>
+        <a class="btn green" href="#how">How it works</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="services">
+    <img class="svcpic" src="svc-row.webp" alt="Workflows · Apps · Portals · Automation · AI Solutions" width="1400" height="245">
+    <img class="mottopic" src="motto-strip.webp" alt="We turn outdated processes into modern solutions." width="1160" height="112">
+  </div>
+
+  <section id="familiar">
+    <div class="wrap">
+      <h2><span class="num chrome-g">01</span>Sound familiar?</h2>
+      <div class="sheet">
+        <table>
+          <thead>
+            <tr><th class="gut">#</th><th>The daily headache</th><th class="stat">Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="gut">1</td><td>"Our whole schedule lives in one giant spreadsheet."</td><td class="stat"><span class="chip">Fixable</span></td></tr>
+            <tr><td class="gut">2</td><td>"We still do that part on paper."</td><td class="stat"><span class="chip">Fixable</span></td></tr>
+            <tr><td class="gut">3</td><td>"We have three systems that don't talk to each other."</td><td class="stat"><span class="chip">Fixable</span></td></tr>
+            <tr><td class="gut">4</td><td>"Only one person in the office knows how it works."</td><td class="stat"><span class="chip">Fixable</span></td></tr>
+            <tr><td class="gut">5</td><td>"We type the same information in twice. Sometimes three times."</td><td class="stat"><span class="chip">Fixable</span></td></tr>
+            <tr><td class="gut">6</td><td>"It's always been done that way."</td><td class="stat"><span class="chip">Fixable</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="after">If any row made you wince, that's exactly the kind of problem we like. <b>Every one of these is fixable.</b></p>
+    </div>
+  </section>
+
+  <section id="how" class="alt">
+    <div class="wrap">
+      <h2><span class="num chrome-g">02</span>How it works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="n chrome-b">1</div>
+          <h3>Show us the mess</h3>
+          <p>A short conversation about how the process works today — the spreadsheet, the paper stack, the workarounds. No preparation needed.</p>
+          <div class="free">Free · No obligation</div>
+        </div>
+        <div class="step green">
+          <div class="n chrome-g">2</div>
+          <h3>We design the fix</h3>
+          <p>You get a plain-English plan for a simpler way to run that process, with a clear fixed quote. No jargon, no surprises.</p>
+          <div class="free">Free · No obligation</div>
+        </div>
+        <div class="step">
+          <div class="n chrome-b">3</div>
+          <h3>We build it</h3>
+          <p>Only if you like the plan. We build it, your team tries it on real work, and we adjust until it fits the way you actually operate.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="who">
+    <div class="wrap">
+      <h2><span class="num chrome-g">03</span>Who we can help</h2>
+      <div class="whogrid">
+        <span class="who">Property management</span>
+        <span class="who">HVAC</span>
+        <span class="who">Plumbing &amp; electrical</span>
+        <span class="who">Contractors &amp; remodelers</span>
+        <span class="who">Landscaping &amp; lawn care</span>
+        <span class="who">Pool service</span>
+        <span class="who">Cleaning &amp; restoration</span>
+        <span class="who">Pest control</span>
+        <span class="who">Auto &amp; marine services</span>
+        <span class="who">Small offices of every kind</span>
+      </div>
+      <p class="whonote">If your business runs on a process — jobs, crews, customers, schedules, invoices — we can probably make it smoother.</p>
+    </div>
+  </section>
+</main>
+
+<div class="contact" id="contact">
+  <div class="wrap">
+    <h2>Get in touch</h2>
+    <p class="big">What's the one thing your team does every day that you wish you could eliminate?</p>
+    <p>Tell us about it — that's the whole first step.</p>
+    <p><a class="mailbig" href="mailto:kimberly@init2fixit.com?subject=Our%20workflow%20headache">kimberly@init2fixit.com</a></p>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 IN IT 2 FIX IT · New Port Richey, Florida</span>
+    <span class="site chrome-b">INIT2FIXIT.COM</span>
+  </div>
+</footer>
+
+</body>
+</html>
