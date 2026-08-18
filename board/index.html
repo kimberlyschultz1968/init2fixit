@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rental Board — IN IT 2 FIX IT</title>
-<meta name="description" content="A live demo rental board: what's out, what's due back, what's overdue, and what's waiting on service. Built by IN IT 2 FIX IT.">
+<meta name="description" content="A live demo: check a unit out to a customer, check it back in, and see every move logged. Built by IN IT 2 FIX IT.">
 <style>
   :root{
     --paper:#FFFFFF; --soft:#F5F8FC; --ink:#161F31; --body:#3C4658; --muted:#6B7688;
-    --blue:#1E4FD6; --deep:#12309B; --green-mid:#2F6B38;
+    --blue:#1E4FD6; --deep:#12309B; --green:#245229; --green-mid:#2F6B38;
     --line:#D9E0EC; --faint:#EBEFF6; --zebra:#F7FAFE;
     --out:#1E4FD6; --due:#B7791F; --over:#C0392B; --svc:#6B4FA8; --ready:#2F6B38;
   }
@@ -26,9 +26,22 @@
   .brandlogo{display:block;width:118px;height:auto}
   .bar .co{font-size:12.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:700}
 
-  .intro{background:var(--paper);border-bottom:1px solid var(--line);padding:26px 0 30px}
-  .intro h1{color:var(--ink);font-size:clamp(21px,3vw,29px);font-weight:800;line-height:1.2}
-  .intro p{margin-top:9px;max-width:74ch;font-size:15.5px}
+  /* tabs */
+  .tabs{background:var(--paper);border-bottom:1px solid var(--line)}
+  .tabs .wrap{display:flex;gap:4px;flex-wrap:wrap}
+  .tab{
+    padding:13px 20px;font:inherit;font-size:14.5px;font-weight:700;color:var(--muted);
+    background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;
+  }
+  .tab:hover{color:var(--ink)}
+  .tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+  .intro{background:var(--paper);border-bottom:1px solid var(--line);padding:24px 0 28px}
+  .intro h1{color:var(--ink);font-size:clamp(20px,2.8vw,28px);font-weight:800;line-height:1.2}
+  .intro p{margin-top:8px;max-width:76ch;font-size:15.5px}
+
+  .view{display:none}
+  .view.on{display:block}
 
   .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:22px 0 0}
   .tile{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:15px 16px;cursor:pointer;transition:border-color .12s, box-shadow .12s;text-align:left;font-family:inherit}
@@ -39,12 +52,11 @@
   .t-out .n{color:var(--out)} .t-due .n{color:var(--due)} .t-over .n{color:var(--over)}
   .t-svc .n{color:var(--svc)} .t-ready .n{color:var(--ready)}
 
-  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:26px 0 12px}
-  .toolbar input{
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:24px 0 12px}
+  .toolbar input[type=search]{
     flex:1;min-width:210px;padding:9px 13px;border:1px solid var(--line);border-radius:7px;
     font:inherit;font-size:14px;background:var(--paper);color:var(--ink);
   }
-  .toolbar input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,79,214,.12)}
   .toolbar .hint{font-size:12.5px;color:var(--muted)}
   .btn-clear{padding:9px 15px;border:1px solid var(--line);background:var(--paper);border-radius:7px;font:inherit;font-size:13.5px;color:var(--body);cursor:pointer}
   .btn-clear:hover{border-color:#AFC3E6}
@@ -63,6 +75,7 @@
   td{padding:11px 14px;border-bottom:1px solid var(--faint);vertical-align:middle;font-size:14.5px}
   tbody tr:nth-child(even) td{background:var(--zebra)}
   tbody tr:hover td{background:#E8F0FE}
+  tbody tr.flash td{background:#FFF6D9;transition:background 2.4s}
   .unit{font-weight:700;color:var(--ink)}
   .sub{display:block;font-size:12px;color:var(--muted);font-weight:400}
   .num{font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -75,6 +88,108 @@
   .late{color:var(--over);font-weight:700}
   .empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:15px}
 
+  /* forms */
+  .formwrap{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:24px}
+  .fcard{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .fhead{padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#FAFCFE,#EDF1F8)}
+  .fhead h2{font-size:16px;font-weight:800;color:var(--ink)}
+  .fhead p{font-size:13px;color:var(--muted);margin-top:2px}
+  .fbody{padding:20px}
+  .fld{margin-bottom:14px}
+  .fld label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:5px}
+  .fld input,.fld select,.fld textarea{
+    width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:7px;
+    font:inherit;font-size:14.5px;background:var(--paper);color:var(--ink);
+  }
+  .fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,79,214,.12)}
+  .fld textarea{resize:vertical;min-height:58px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .chk{display:flex;align-items:center;gap:9px;margin-bottom:14px;font-size:14px}
+  .chk input{width:17px;height:17px;accent-color:var(--blue);flex:none}
+  .go{
+    width:100%;padding:13px 20px;border-radius:7px;border:1px solid #0F2B8C;cursor:pointer;
+    font:inherit;font-size:15px;font-weight:800;color:#fff;letter-spacing:.02em;
+    background:linear-gradient(180deg,#6FA5F7 0%,#2F6FE8 45%,#1E4FD6 52%,#12309B 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2px 8px rgba(18,48,155,.24);
+    text-shadow:0 1px 2px rgba(6,16,60,.45);
+  }
+  .go:hover{background:linear-gradient(180deg,#83B3F9,#4A85F5 45%,#2F6FE8 52%,#1E4FD6)}
+  .go.g{border-color:#122A16;background:linear-gradient(180deg,#57A264,#2F6B38 48%,#1E4B26 55%,#16351B);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 8px rgba(22,53,27,.24)}
+  .go.g:hover{background:linear-gradient(180deg,#68B275,#3B7C45 48%,#245229 55%,#1E4B26)}
+  .note{margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .ok{margin-top:12px;padding:11px 14px;border-radius:7px;background:#E3F2E6;border:1px solid #C2E0C8;color:#1E4B26;font-size:14px;font-weight:600;display:none}
+  .ok.show{display:block}
+
+  /* log */
+  .log{margin-top:24px;background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .logrow{display:flex;gap:16px;padding:14px 20px;border-bottom:1px solid var(--faint);align-items:flex-start}
+  .logrow:last-child{border-bottom:none}
+  .logrow:nth-child(even){background:var(--zebra)}
+  .logrow .when{flex:none;width:150px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:2px}
+  .logrow .what{flex:1;font-size:14.5px}
+  .logrow .what b{color:var(--ink)}
+  .logrow .who{flex:none;font-size:12.5px;color:var(--muted);text-align:right;padding-top:2px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
+  .d-out{background:var(--out)} .d-in{background:var(--ready)} .d-svc{background:var(--svc)}
+
+  /* ===== owner's board ===== */
+  .periods{display:flex;gap:0;margin:24px 0 0;border:1px solid var(--line);border-radius:8px;overflow:hidden;width:fit-content;background:var(--paper)}
+  .per{padding:10px 22px;font:inherit;font-size:14px;font-weight:700;color:var(--muted);background:var(--paper);border:none;border-right:1px solid var(--line);cursor:pointer}
+  .per:last-child{border-right:none}
+  .per:hover{color:var(--ink);background:#F1F5FA}
+  .per.on{color:#fff;background:linear-gradient(180deg,#2F6FE8,#1E4FD6 52%,#12309B)}
+
+  .hero{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:26px 28px;margin-top:16px;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .hero .lab{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .hero .fig{font-size:clamp(38px,6vw,58px);font-weight:800;color:var(--ink);line-height:1.05;font-variant-numeric:tabular-nums;margin-top:4px}
+  .hero .delta{font-size:14.5px;margin-top:6px;color:var(--muted)}
+  .hero .delta b{color:var(--ready);font-weight:700}
+  .hero .delta b.dn{color:var(--over)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  .kpi{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:16px 18px}
+  .kpi .l{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .kpi .v{font-size:25px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:3px;line-height:1.1}
+  .kpi .s{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .kpi .v.warn{color:var(--over)}
+
+  .chartcard{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:22px 24px 18px;margin-top:14px;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .chartcard h3{font-size:15.5px;font-weight:800;color:var(--ink)}
+  .chartcard .cs{font-size:13px;color:var(--muted);margin-top:2px;margin-bottom:16px}
+  .plot{position:relative;height:210px;margin-left:56px;border-bottom:1px solid var(--line)}
+  .gl{position:absolute;left:0;right:0;height:1px;background:var(--faint)}
+  .gl span{position:absolute;left:-56px;top:-8px;width:48px;text-align:right;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .cols{position:absolute;inset:0;display:flex;align-items:flex-end;gap:0}
+  .slot{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;position:relative;cursor:default}
+  .col{width:100%;max-width:24px;background:#1E4FD6;border-radius:4px 4px 0 0;transition:background .12s}
+  .slot:hover .col{background:#12309B}
+  .xlabels{display:flex;margin-left:56px;margin-top:7px}
+  .xlabels div{flex:1;text-align:center;font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden}
+  .tip{
+    position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    background:#161F31;color:#fff;padding:7px 11px;border-radius:6px;font-size:12.5px;
+    white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .1s;z-index:5;font-variant-numeric:tabular-nums;
+  }
+  .slot:hover .tip{opacity:1}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .brow{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+  .brow .bn{flex:none;width:132px;font-size:13.5px;color:var(--body)}
+  .brow .bt{flex:1;height:22px;background:var(--faint);border-radius:4px;overflow:hidden}
+  .brow .bf{height:100%;background:#1E4FD6;border-radius:0 4px 4px 0}
+  .brow .bv{flex:none;width:76px;text-align:right;font-size:13.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ctable{width:100%;border-collapse:collapse;min-width:0}
+  .ctable td{padding:9px 0;border-bottom:1px solid var(--faint);font-size:14px}
+  .ctable tr:last-child td{border-bottom:none}
+  .ctable td:last-child{text-align:right;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ctable td .cs2{display:block;font-size:12px;color:var(--muted)}
+
+  .leak{background:linear-gradient(180deg,#FFF9EC,#FFF4DC);border:1px solid #F2DCA6;border-radius:10px;padding:20px 24px;margin-top:14px}
+  .leak h3{font-size:15.5px;font-weight:800;color:#8A5B00;margin-bottom:12px}
+  .leak .lg{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .leak .li .v{font-size:23px;font-weight:800;color:#96271B;font-variant-numeric:tabular-nums;line-height:1.1}
+  .leak .li .l{font-size:13px;color:#8A5B00;margin-top:3px}
+
   .why{margin:30px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
   .card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;position:relative;overflow:hidden}
   .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#0F2B8C,#5B93F2,#0F2B8C)}
@@ -83,22 +198,32 @@
 
   .close{margin:32px 0 0;background:linear-gradient(160deg,#0E2878,#1E4FD6 50%,#12309B);color:#fff;border-radius:11px;padding:34px 30px;text-align:center}
   .close h2{font-size:clamp(19px,2.6vw,25px);font-weight:800;margin-bottom:10px}
-  .close p{color:#DCE6FB;max-width:60ch;margin:0 auto;font-size:15.5px}
+  .close p{color:#DCE6FB;max-width:62ch;margin:0 auto;font-size:15.5px}
   .close a{display:inline-block;margin-top:18px;background:#fff;color:var(--deep);text-decoration:none;font-weight:800;padding:13px 30px;border-radius:7px;font-size:15.5px}
   .close a:hover{background:#E8F0FE}
 
   footer{padding:26px 0 40px;text-align:center;font-size:13px;color:var(--muted)}
   footer a{color:var(--blue);text-decoration:none;font-weight:600}
 
-  @media (max-width:900px){ .tiles{grid-template-columns:repeat(3,1fr)} .why{grid-template-columns:1fr} }
-  @media (max-width:560px){ .tiles{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:900px){
+    .tiles{grid-template-columns:repeat(3,1fr)} .why{grid-template-columns:1fr} .formwrap{grid-template-columns:1fr}
+    .logrow{flex-wrap:wrap;gap:6px} .logrow .when{width:auto} .logrow .who{text-align:left}
+  }
+  @media (max-width:900px){
+    .kpis{grid-template-columns:repeat(2,1fr)} .split{grid-template-columns:1fr} .leak .lg{grid-template-columns:1fr;gap:14px}
+  }
+  @media (max-width:560px){
+    .tiles{grid-template-columns:repeat(2,1fr)} .two{grid-template-columns:1fr}
+    .per{padding:10px 14px;font-size:13px} .brow .bn{width:96px}
+    .plot{margin-left:46px} .gl span{left:-46px;width:40px} .xlabels{margin-left:46px}
+  }
 </style>
 </head>
 <body>
 
 <div class="ribbon">
   <div class="wrap">
-    <span><b>Demo</b> — sample data, nothing real. Click the tiles, sort the columns, search the yard.</span>
+    <span><b>Demo</b> — sample data. Check a unit out, check one back in, and watch the board and the log update.</span>
     <span>Built by <a href="https://init2fixit.com">IN IT 2 FIX IT</a></span>
   </div>
 </div>
@@ -110,60 +235,290 @@
   </div>
 </header>
 
+<div class="tabs">
+  <div class="wrap">
+    <button class="tab on" data-v="board">The board</button>
+    <button class="tab" data-v="desk">Check out / check in</button>
+    <button class="tab" data-v="logv">Activity log</button>
+    <button class="tab" data-v="owner">Owner's board</button>
+  </div>
+</div>
+
 <div class="intro">
   <div class="wrap">
-    <h1>Where is every unit, right now?</h1>
-    <p>One screen: what's out, what's due back today, what's overdue, what's stuck waiting on service, and what's ready to go out again. This is the question a spreadsheet can never answer on the first try — because by the time you've scrolled to the row, somebody has already called the yard to ask.</p>
+    <h1 id="ih">Where is every unit, right now?</h1>
+    <p id="ip">One screen: what's out, what's due back today, what's overdue, what's waiting on service, and what's ready to go out again. This is the question a spreadsheet can never answer on the first try — because by the time you've scrolled to the row, somebody has already called the yard to ask.</p>
   </div>
 </div>
 
 <div class="wrap">
-  <div class="tiles" id="tiles"></div>
 
-  <div class="toolbar">
-    <input id="q" type="search" placeholder="Search unit, customer, job site, or event…" autocomplete="off">
-    <button class="btn-clear" id="clear">Show all</button>
-    <span class="hint" id="count"></span>
-  </div>
+  <!-- ============ BOARD ============ -->
+  <div class="view on" id="v-board">
+    <div class="tiles" id="tiles"></div>
 
-  <div class="panel">
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th data-k="unit">Unit <span class="ar">&#9650;</span></th>
-            <th data-k="status">Status <span class="ar">&#9650;</span></th>
-            <th data-k="customer">Customer <span class="ar">&#9650;</span></th>
-            <th data-k="site">Job site / event <span class="ar">&#9650;</span></th>
-            <th data-k="outd">Went out <span class="ar">&#9650;</span></th>
-            <th data-k="due">Due back <span class="ar">&#9650;</span></th>
-            <th data-k="days">Days <span class="ar">&#9650;</span></th>
-            <th data-k="rate">Rate <span class="ar">&#9650;</span></th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Search unit, customer, job site, or event…" autocomplete="off">
+      <button class="btn-clear" id="clear">Show all</button>
+      <span class="hint" id="count"></span>
+    </div>
+
+    <div class="panel">
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th data-k="unit">Unit <span class="ar">&#9650;</span></th>
+              <th data-k="status">Status <span class="ar">&#9650;</span></th>
+              <th data-k="customer">Rented to <span class="ar">&#9650;</span></th>
+              <th data-k="site">Job site / event <span class="ar">&#9650;</span></th>
+              <th data-k="outd">Went out <span class="ar">&#9650;</span></th>
+              <th data-k="due">Due back <span class="ar">&#9650;</span></th>
+              <th data-k="days">Days <span class="ar">&#9650;</span></th>
+              <th data-k="rate">Rate <span class="ar">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="why">
+      <div class="card">
+        <h3>Overdue units stop hiding</h3>
+        <p>Three units a month coming back a week late is real money nobody invoiced. On a spreadsheet it goes unnoticed until the customer finally returns it.</p>
+      </div>
+      <div class="card">
+        <h3>Service stops being a black hole</h3>
+        <p>A unit waiting on a part isn't available and isn't earning. That should be visible to whoever is answering the phone, not just to the shop.</p>
+      </div>
+      <div class="card">
+        <h3>The counter can answer instantly</h3>
+        <p>"Do you have a 40-foot boom for Thursday?" gets answered off this screen instead of a walk through the yard and two phone calls back.</p>
+      </div>
     </div>
   </div>
 
-  <div class="why">
-    <div class="card">
-      <h3>Overdue units stop hiding</h3>
-      <p>Three units a month coming back a week late is real money nobody invoiced. On a spreadsheet it goes unnoticed until the customer finally returns it.</p>
+  <!-- ============ DESK ============ -->
+  <div class="view" id="v-desk">
+    <div class="formwrap">
+
+      <div class="fcard">
+        <div class="fhead">
+          <h2>Check a unit out</h2>
+          <p>What the counter fills in when something leaves the yard.</p>
+        </div>
+        <div class="fbody">
+          <div class="fld">
+            <label>Unit</label>
+            <select id="o-unit"></select>
+          </div>
+          <div class="two">
+            <div class="fld">
+              <label>Rented to (company)</label>
+              <input id="o-cust" placeholder="Brennan Site Works">
+            </div>
+            <div class="fld">
+              <label>Contact person</label>
+              <input id="o-person" placeholder="Dave Brennan">
+            </div>
+          </div>
+          <div class="two">
+            <div class="fld">
+              <label>Phone</label>
+              <input id="o-phone" placeholder="(727) 555-0148">
+            </div>
+            <div class="fld">
+              <label>PO / reference</label>
+              <input id="o-po" placeholder="PO-4471">
+            </div>
+          </div>
+          <div class="fld">
+            <label>Job site or event</label>
+            <input id="o-site" placeholder="Oakmont Ridge Ph. 2">
+          </div>
+          <div class="two">
+            <div class="fld">
+              <label>Out date</label>
+              <input id="o-out" type="date">
+            </div>
+            <div class="fld">
+              <label>Due back</label>
+              <input id="o-due" type="date">
+            </div>
+          </div>
+          <div class="two">
+            <div class="fld">
+              <label>Rate</label>
+              <input id="o-rate" placeholder="auto-fills from the unit">
+            </div>
+            <div class="fld">
+              <label>Deposit taken</label>
+              <input id="o-dep" placeholder="$500">
+            </div>
+          </div>
+          <div class="chk"><input type="checkbox" id="o-id" checked><label for="o-id" style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;font-weight:400;color:var(--body)">Driver's licence and insurance verified</label></div>
+          <div class="fld">
+            <label>Logged by</label>
+            <select id="o-by">
+              <option>Mike C. — counter</option>
+              <option>Dana R. — counter</option>
+              <option>Luis O. — yard</option>
+              <option>Sam P. — manager</option>
+            </select>
+          </div>
+          <button class="go" id="o-go">Check out</button>
+          <div class="ok" id="o-ok"></div>
+          <p class="note">The unit moves to <b>Out</b> on the board, the customer is attached to it, and a timestamped entry lands in the activity log with the name of whoever did it.</p>
+        </div>
+      </div>
+
+      <div class="fcard">
+        <div class="fhead">
+          <h2>Check a unit back in</h2>
+          <p>What happens when it comes off the truck.</p>
+        </div>
+        <div class="fbody">
+          <div class="fld">
+            <label>Unit coming back</label>
+            <select id="i-unit"></select>
+          </div>
+          <div class="fld">
+            <label>Returned</label>
+            <input id="i-date" type="date">
+          </div>
+          <div class="fld">
+            <label>Condition</label>
+            <select id="i-cond">
+              <option value="ready">Good — back on the available list</option>
+              <option value="service">Needs service before it goes out again</option>
+            </select>
+          </div>
+          <div class="fld">
+            <label>Damage or service notes</label>
+            <textarea id="i-notes" placeholder="Hydraulic seep on the left cylinder"></textarea>
+          </div>
+          <div class="two">
+            <div class="fld">
+              <label>Hours / meter</label>
+              <input id="i-hrs" placeholder="1,284">
+            </div>
+            <div class="fld">
+              <label>Fuel</label>
+              <select id="i-fuel">
+                <option>Full</option><option>3/4</option><option>1/2</option>
+                <option>1/4</option><option>Empty — bill for fuel</option>
+              </select>
+            </div>
+          </div>
+          <div class="chk"><input type="checkbox" id="i-clean"><label for="i-clean" style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;font-weight:400;color:var(--body)">Cleaning charge applies</label></div>
+          <div class="fld">
+            <label>Logged by</label>
+            <select id="i-by">
+              <option>Luis O. — yard</option>
+              <option>Mike C. — counter</option>
+              <option>Dana R. — counter</option>
+              <option>Sam P. — manager</option>
+            </select>
+          </div>
+          <button class="go g" id="i-go">Check in</button>
+          <div class="ok" id="i-ok"></div>
+          <p class="note">If it needs work it goes straight to <b>In service</b> instead of <b>Ready</b>, so nobody promises it to a customer on Thursday.</p>
+        </div>
+      </div>
+
     </div>
-    <div class="card">
-      <h3>Service stops being a black hole</h3>
-      <p>A unit waiting on a part isn't available and isn't earning. That should be visible to whoever is answering the phone, not just to the shop.</p>
+  </div>
+
+  <!-- ============ LOG ============ -->
+  <div class="view" id="v-logv">
+    <div class="log" id="logbox"></div>
+    <div class="why" style="margin-top:22px">
+      <div class="card">
+        <h3>Every move has a name on it</h3>
+        <p>Who checked it out, who took it back, and when. Not to police anybody — so that when a customer says nobody told them it was due, there's an answer.</p>
+      </div>
+      <div class="card">
+        <h3>The customer is attached to the unit</h3>
+        <p>Company, contact, phone and PO all captured at the counter. Finding out who has your generator becomes one search instead of three phone calls.</p>
+      </div>
+      <div class="card">
+        <h3>Nothing gets written twice</h3>
+        <p>Logged once at the counter, and it feeds the board, the overdue list, and the invoice. No re-keying into a second spreadsheet at the end of the day.</p>
+      </div>
     </div>
-    <div class="card">
-      <h3>The counter can answer instantly</h3>
-      <p>"Do you have a 40-foot boom for Thursday?" gets answered off this screen instead of a walk through the yard and two phone calls back.</p>
+  </div>
+
+  <!-- ============ OWNER ============ -->
+  <div class="view" id="v-owner">
+    <div class="periods" id="periods">
+      <button class="per" data-p="day">Today</button>
+      <button class="per on" data-p="week">This week</button>
+      <button class="per" data-p="month">This month</button>
+      <button class="per" data-p="year">This year</button>
+    </div>
+
+    <div class="hero">
+      <div class="lab" id="h-lab">Rental revenue — this week</div>
+      <div class="fig" id="h-fig">$26,140</div>
+      <div class="delta" id="h-del"></div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="l">Units earning</div><div class="v" id="k-util">—</div><div class="s" id="k-utils">—</div></div>
+      <div class="kpi"><div class="l">Avg days on rent</div><div class="v" id="k-days">—</div><div class="s">per contract</div></div>
+      <div class="kpi"><div class="l">Contracts written</div><div class="v" id="k-cts">—</div><div class="s" id="k-ctss">—</div></div>
+      <div class="kpi"><div class="l">Revenue per unit</div><div class="v" id="k-rpu">—</div><div class="s">across the whole fleet</div></div>
+    </div>
+
+    <div class="chartcard">
+      <h3 id="c-title">Revenue by day</h3>
+      <div class="cs" id="c-sub">Hover any column for the exact figure.</div>
+      <div class="plot" id="plot"></div>
+      <div class="xlabels" id="xlab"></div>
+    </div>
+
+    <div class="split">
+      <div class="chartcard" style="margin-top:0">
+        <h3>Where the money came from</h3>
+        <div class="cs">Revenue by equipment category.</div>
+        <div id="cats"></div>
+      </div>
+      <div class="chartcard" style="margin-top:0">
+        <h3>Top customers</h3>
+        <div class="cs">By revenue for the period shown.</div>
+        <table class="ctable"><tbody id="custs"></tbody></table>
+      </div>
+    </div>
+
+    <div class="leak">
+      <h3>What's leaking right now</h3>
+      <div class="lg">
+        <div class="li"><div class="v">$8,940</div><div class="l">Sitting on overdue units — 4 units, 36 unbilled days between them</div></div>
+        <div class="li"><div class="v">$3,270</div><div class="l">Lost to units stuck in service this month — 3 units, 14 days down</div></div>
+        <div class="li"><div class="v">$2,115</div><div class="l">Ready units that never went out this week — 3 units idle in the yard</div></div>
+      </div>
+    </div>
+
+    <div class="why">
+      <div class="card">
+        <h3>This is the same data, not a second entry</h3>
+        <p>Every number here comes from what the counter already typed at check-out. Nobody builds an owner's report — it exists because the work got logged once.</p>
+      </div>
+      <div class="card">
+        <h3>You can see it from anywhere</h3>
+        <p>It's a web page. From a phone at the boat ramp on Saturday, you can see whether the week is ahead or behind without calling the yard.</p>
+      </div>
+      <div class="card">
+        <h3>The leaks have dollar amounts</h3>
+        <p>"Some stuff is overdue" is easy to live with. "$8,940 is sitting in overdue units" is not. That's the number that makes someone chase it.</p>
+      </div>
     </div>
   </div>
 
   <div class="close">
     <h2>Is this close to how your yard actually runs?</h2>
-    <p>This is a demo built to start a conversation. If it's close, the real version gets shaped around how you already work — your unit numbers, your statuses, your rates. If it's nowhere near, tell me that too. That's just as useful.</p>
+    <p>This is a demo built to start a conversation. If it's close, the real version gets shaped around how you already work — your unit numbers, your statuses, your rates, your paperwork. If it's nowhere near, tell me that too. That's just as useful.</p>
     <a href="mailto:kimberly@init2fixit.com?subject=About%20the%20rental%20board">Tell me what's wrong with it</a>
   </div>
 </div>
@@ -200,6 +555,16 @@ var DATA=[
  {unit:"Allmand Night-Lite",sub:"Light tower · #LT-0207",status:"out",customer:"Riverside Events LLC",site:"Harvest Fest parking",outd:"Aug 14",due:"Aug 19",days:0,rate:"$135/day"}
 ];
 
+var LOG=[
+ {t:"Today  7:42 am",k:"in", txt:"<b>Ditch Witch SK800</b> checked in from Coastal Grading — good condition, back on the available list", who:"Luis O."},
+ {t:"Today  7:15 am",k:"out",txt:"<b>Allmand Night-Lite</b> checked out to <b>Riverside Events LLC</b> — Harvest Fest parking, due Aug 19", who:"Mike C."},
+ {t:"Yesterday  4:51 pm",k:"svc",txt:"<b>30x60 Pole Tent</b> moved to in service — torn panel found at check-in", who:"Luis O."},
+ {t:"Yesterday  2:08 pm",k:"out",txt:"<b>400 Padded Chairs</b> checked out to <b>Tampa Bay Rotary</b> — annual gala, due Aug 18", who:"Dana R."},
+ {t:"Yesterday  9:30 am",k:"out",txt:"<b>20x40 Frame Tent</b> checked out to <b>Coleman / Ruiz wedding</b> — Sandhill Barn, due Aug 18", who:"Dana R."},
+ {t:"Aug 14  3:20 pm",k:"out",txt:"<b>Multiquip DCA45</b> checked out to <b>Riverside Events LLC</b> — Harvest Fest main stage, due Aug 19", who:"Mike C."},
+ {t:"Aug 13  11:05 am",k:"out",txt:"<b>Kubota SVL75</b> checked out to <b>Brennan Site Works</b> — Oakmont Ridge Ph. 2, due Aug 27", who:"Sam P."}
+];
+
 var META={
   out:{label:"Out",cls:"p-out"}, due:{label:"Due today",cls:"p-due"},
   overdue:{label:"Overdue",cls:"p-over"}, service:{label:"In service",cls:"p-svc"},
@@ -210,8 +575,136 @@ var TILES=[
   {k:"overdue",l:"Overdue",c:"t-over"},{k:"service",l:"In service",c:"t-svc"},
   {k:"ready",l:"Ready",c:"t-ready"}
 ];
+var HEAD={
+  board:["Where is every unit, right now?","One screen: what's out, what's due back today, what's overdue, what's waiting on service, and what's ready to go out again. This is the question a spreadsheet can never answer on the first try — because by the time you've scrolled to the row, somebody has already called the yard to ask."],
+  desk:["How a rental actually gets logged","This is the counter. Fill it in and the unit moves on the board, the customer gets attached to it, and the activity log records who did it and when. One entry, typed once, feeds everything else."],
+  logv:["Who did what, and when","Every check-out and check-in, in order, with a name on it. This is the part that does not exist when the yard runs on a spreadsheet — and the part everyone wishes they had the first time something goes missing."],
+  owner:["What the yard actually made","The owner's view. Same data the counter typed in, added up — by day, week, month and year, with the money that is leaking called out in dollars instead of adjectives."]
+};
 
-var filter=null, sortK=null, sortAsc=true;
+var PER={
+ day:{
+  lab:"Rental revenue — today", fig:"$4,820", prev:"$4,215", up:true, since:"vs the same day last week —",
+  util:"13 of 20", utils:"65% of the fleet is earning", days:"6.2", cts:"3", ctss:"written today", rpu:"$241",
+  ctitle:"Revenue by day", csub:"The last 14 days. Hover any column for the exact figure.",
+  bars:[3180,4420,5110,2890,4760,5340,3620,4180,5920,4470,3050,5680,4215,4820],
+  xs:["","Aug 5","","Aug 7","","Aug 9","","Aug 11","","Aug 13","","Aug 15","","Today"],
+  cats:[["Earth moving",1640],["Aerial lifts",1310],["Power & light",860],["Event & tent",620],["Material handling",390]],
+  custs:[["Brennan Site Works","Track loader · 2 units",1580],["Riverside Events LLC","Generator + light tower",1040],["Vertex Electrical","60 ft boom lift",520]]
+ },
+ week:{
+  lab:"Rental revenue — this week", fig:"$26,140", prev:"$23,880", up:true, since:"vs last week —",
+  util:"13 of 20", utils:"65% of the fleet is earning", days:"7.4", cts:"14", ctss:"written this week", rpu:"$1,307",
+  ctitle:"Revenue by week", csub:"The last 12 weeks. Hover any column for the exact figure.",
+  bars:[19400,22150,18700,24300,21050,25600,23100,19850,26900,22400,23880,26140],
+  xs:["","","Jun 8","","","Jun 29","","","Jul 20","","","This wk"],
+  cats:[["Earth moving",8920],["Aerial lifts",6840],["Event & tent",4610],["Power & light",3520],["Material handling",2250]],
+  custs:[["Brennan Site Works","Two loaders, ongoing site work",5740],["Riverside Events LLC","Harvest Fest — 4 units",4180],["Vertex Electrical","Boom lift, County Annex",3640],["Meridian Facilities","Articulating boom",2790],["Pinnacle Paving","Roller — now overdue",1920]]
+ },
+ month:{
+  lab:"Rental revenue — August to date", fig:"$98,450", prev:"$112,300", up:false, since:"vs July, which finished at",
+  util:"13 of 20", utils:"65% average for the month", days:"8.1", cts:"52", ctss:"written this month", rpu:"$4,923",
+  ctitle:"Revenue by month", csub:"The last 12 months. Hover any column for the exact figure.",
+  bars:[74200,81600,96400,108900,121400,134700,127300,115800,102600,94100,112300,98450],
+  xs:["Sep","","Nov","","Jan","","Mar","","May","","Jul","Aug"],
+  cats:[["Earth moving",34100],["Aerial lifts",25800],["Event & tent",17600],["Power & light",13200],["Material handling",7750]],
+  custs:[["Brennan Site Works","Ongoing — Oakmont Ridge",18400],["Keystone Utilities","Backhoe — currently overdue",12650],["Riverside Events LLC","Festival season",11200],["Vertex Electrical","Two reroof projects",9840],["Delgado Concrete","Saws and compactors",7310]]
+ },
+ year:{
+  lab:"Rental revenue — 2026 to date", fig:"$1,284,300", prev:"$1,141,700", up:true, since:"vs the same point last year —",
+  util:"68%", utils:"average across the year", days:"7.8", cts:"614", ctss:"written this year", rpu:"$64,215",
+  ctitle:"Revenue by year", csub:"The last five years. 2026 is a partial year. Hover any column for the exact figure.",
+  bars:[812000,905400,1043600,1218900,1284300],
+  xs:["2022","2023","2024","2025","2026 YTD"],
+  cats:[["Earth moving",442000],["Aerial lifts",336500],["Event & tent",231200],["Power & light",174300],["Material handling",100300]],
+  custs:[["Brennan Site Works","Largest account, 4 years running",186400],["Riverside Events LLC","Seasonal, high margin",121900],["Meridian Facilities","Steady monthly contracts",98700],["Vertex Electrical","Commercial reroofs",87200],["Keystone Utilities","Municipal work",74600]]
+ }
+};
+
+function money(n){
+  return "$"+n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,",");
+}
+function shortMoney(n){
+  if(n>=1000000) return "$"+(n/1000000).toFixed(n>=10000000?0:1)+"M";
+  if(n>=1000) return "$"+Math.round(n/1000)+"k";
+  return "$"+n;
+}
+
+function drawOwner(p){
+  var d=PER[p];
+  document.getElementById("h-lab").textContent=d.lab;
+  document.getElementById("h-fig").textContent=d.fig;
+  var cur=parseFloat(d.fig.replace(/[$,]/g,"")), pv=parseFloat(d.prev.replace(/[$,]/g,""));
+  var pct=Math.round(Math.abs(cur-pv)/pv*1000)/10;
+  document.getElementById("h-del").innerHTML =
+    '<b class="'+(d.up?"":"dn")+'">'+(d.up?"▲":"▼")+" "+pct+'%</b> ' + d.since + " " + d.prev;
+  document.getElementById("k-util").textContent=d.util;
+  document.getElementById("k-utils").textContent=d.utils;
+  document.getElementById("k-days").textContent=d.days;
+  document.getElementById("k-cts").textContent=d.cts;
+  document.getElementById("k-ctss").textContent=d.ctss;
+  document.getElementById("k-rpu").textContent=d.rpu;
+  document.getElementById("c-title").textContent=d.ctitle;
+  document.getElementById("c-sub").textContent=d.csub;
+
+  var max=0,i;
+  for(i=0;i<d.bars.length;i++){ if(d.bars[i]>max) max=d.bars[i]; }
+  var top=Math.ceil(max/ (max>200000?100000:(max>20000?5000:1000)) ) * (max>200000?100000:(max>20000?5000:1000));
+
+  var gl="";
+  for(i=0;i<=3;i++){
+    var val=top*(3-i)/3;
+    gl+='<div class="gl" style="top:'+(i*100/3)+'%"><span>'+shortMoney(Math.round(val))+'</span></div>';
+  }
+  var cols='<div class="cols">';
+  for(i=0;i<d.bars.length;i++){
+    var h=(d.bars[i]/top*100);
+    var lbl=d.xs[i]||("#"+(i+1));
+    cols+='<div class="slot"><div class="tip">'+lbl+" · "+money(d.bars[i])+'</div>'
+        + '<div class="col" style="height:'+h+'%"></div></div>';
+  }
+  cols+='</div>';
+  document.getElementById("plot").innerHTML=gl+cols;
+
+  var xl="";
+  for(i=0;i<d.xs.length;i++) xl+="<div>"+d.xs[i]+"</div>";
+  document.getElementById("xlab").innerHTML=xl;
+
+  var cmax=0;
+  for(i=0;i<d.cats.length;i++){ if(d.cats[i][1]>cmax) cmax=d.cats[i][1]; }
+  var ch="";
+  for(i=0;i<d.cats.length;i++){
+    ch+='<div class="brow"><div class="bn">'+d.cats[i][0]+'</div>'
+      + '<div class="bt"><div class="bf" style="width:'+(d.cats[i][1]/cmax*100)+'%"></div></div>'
+      + '<div class="bv">'+shortMoney(d.cats[i][1])+'</div></div>';
+  }
+  document.getElementById("cats").innerHTML=ch;
+
+  var th="";
+  for(i=0;i<d.custs.length;i++){
+    th+='<tr><td>'+d.custs[i][0]+'<span class="cs2">'+d.custs[i][1]+'</span></td>'
+      + '<td>'+money(d.custs[i][2])+'</td></tr>';
+  }
+  document.getElementById("custs").innerHTML=th;
+}
+
+var filter=null, sortK=null, sortAsc=true, flashUnit=null;
+
+function fmt(d){
+  if(!d) return "—";
+  var p=d.split("-"); if(p.length!==3) return d;
+  var M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return M[parseInt(p[1],10)-1]+" "+p[2];
+}
+function stamp(){
+  var d=new Date(), h=d.getHours(), m=d.getMinutes();
+  var ap=h>=12?"pm":"am"; h=h%12; if(h===0) h=12;
+  return "Today  "+h+":"+(m<10?"0":"")+m+" "+ap;
+}
+function today(){
+  var d=new Date();
+  return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
+}
 
 function drawTiles(){
   var html="";
@@ -225,7 +718,7 @@ function drawTiles(){
   var btns=document.querySelectorAll(".tile");
   for(var b=0;b<btns.length;b++){
     btns[b].onclick=function(){
-      filter = (filter===this.dataset.f) ? null : this.dataset.f;
+      filter=(filter===this.dataset.f)?null:this.dataset.f;
       drawTiles(); draw();
     };
   }
@@ -242,10 +735,10 @@ function draw(){
   }
   if(sortK){
     rows.sort(function(a,b){
-      var x=a[sortK], y=b[sortK];
-      if(typeof x==="number" && typeof y==="number") return sortAsc ? x-y : y-x;
+      var x=a[sortK],y=b[sortK];
+      if(typeof x==="number"&&typeof y==="number") return sortAsc?x-y:y-x;
       x=String(x).toLowerCase(); y=String(y).toLowerCase();
-      return sortAsc ? x.localeCompare(y) : y.localeCompare(x);
+      return sortAsc?x.localeCompare(y):y.localeCompare(x);
     });
   }
   var tb=document.getElementById("rows");
@@ -255,32 +748,112 @@ function draw(){
     var out="";
     for(var r=0;r<rows.length;r++){
       var d2=rows[r], m=META[d2.status];
-      var days = d2.status==="overdue" ? '<span class="late">'+d2.days+' late</span>' : "—";
-      out += '<tr>'
-        + '<td><span class="unit">'+d2.unit+'</span><span class="sub">'+d2.sub+'</span></td>'
-        + '<td><span class="pill '+m.cls+'">'+m.label+'</span></td>'
-        + '<td>'+d2.customer+'</td>'
-        + '<td>'+d2.site+'</td>'
-        + '<td class="num">'+d2.outd+'</td>'
-        + '<td class="num">'+d2.due+'</td>'
-        + '<td class="num">'+days+'</td>'
-        + '<td class="num">'+d2.rate+'</td>'
-        + '</tr>';
+      var days=d2.status==="overdue"?'<span class="late">'+d2.days+' late</span>':"—";
+      out+='<tr'+(d2.unit===flashUnit?' class="flash"':'')+'>'
+        +'<td><span class="unit">'+d2.unit+'</span><span class="sub">'+d2.sub+'</span></td>'
+        +'<td><span class="pill '+m.cls+'">'+m.label+'</span></td>'
+        +'<td>'+d2.customer+'</td><td>'+d2.site+'</td>'
+        +'<td class="num">'+d2.outd+'</td><td class="num">'+d2.due+'</td>'
+        +'<td class="num">'+days+'</td><td class="num">'+d2.rate+'</td></tr>';
     }
     tb.innerHTML=out;
   }
   document.getElementById("count").textContent =
-    (rows.length===DATA.length) ? DATA.length+" units" : rows.length+" of "+DATA.length+" units";
+    (rows.length===DATA.length)?DATA.length+" units":rows.length+" of "+DATA.length+" units";
+  if(flashUnit){ setTimeout(function(){ flashUnit=null; draw(); },2600); }
 }
+
+function drawLog(){
+  var h="";
+  for(var i=0;i<LOG.length;i++){
+    var e=LOG[i];
+    var cls=e.k==="out"?"d-out":(e.k==="svc"?"d-svc":"d-in");
+    h+='<div class="logrow"><div class="when">'+e.t+'</div>'
+      +'<div class="what"><span class="dot '+cls+'"></span>'+e.txt+'</div>'
+      +'<div class="who">'+e.who+'</div></div>';
+  }
+  document.getElementById("logbox").innerHTML=h;
+}
+
+function fillSelects(){
+  var o="",n="";
+  for(var i=0;i<DATA.length;i++){
+    var d=DATA[i];
+    if(d.status==="ready") o+='<option value="'+i+'">'+d.unit+' — '+d.sub+'</option>';
+    if(d.status==="out"||d.status==="due"||d.status==="overdue")
+      n+='<option value="'+i+'">'+d.unit+' — out to '+d.customer+'</option>';
+  }
+  document.getElementById("o-unit").innerHTML = o || '<option value="">Nothing available — everything is out</option>';
+  document.getElementById("i-unit").innerHTML = n || '<option value="">Nothing is out right now</option>';
+  var s=document.getElementById("o-unit");
+  if(s.value!=="") document.getElementById("o-rate").value=DATA[s.value].rate;
+}
+
+function showOk(id,msg){
+  var el=document.getElementById(id);
+  el.innerHTML=msg; el.className="ok show";
+  setTimeout(function(){ el.className="ok"; },6000);
+}
+
+document.getElementById("o-unit").addEventListener("change",function(){
+  if(this.value!=="") document.getElementById("o-rate").value=DATA[this.value].rate;
+});
+
+document.getElementById("o-go").onclick=function(){
+  var s=document.getElementById("o-unit");
+  if(s.value===""){ return; }
+  var i=parseInt(s.value,10), d=DATA[i];
+  var cust=document.getElementById("o-cust").value.trim()||"Walk-in customer";
+  var person=document.getElementById("o-person").value.trim();
+  var site=document.getElementById("o-site").value.trim()||"Not specified";
+  var od=document.getElementById("o-out").value, dd=document.getElementById("o-due").value;
+  var by=document.getElementById("o-by").value.split(" — ")[0];
+  var po=document.getElementById("o-po").value.trim();
+  d.status="out"; d.customer=cust; d.site=site;
+  d.outd=od?fmt(od):fmt(today()); d.due=dd?fmt(dd):"open"; d.days=0;
+  if(document.getElementById("o-rate").value.trim()) d.rate=document.getElementById("o-rate").value.trim();
+  LOG.unshift({t:stamp(),k:"out",
+    txt:"<b>"+d.unit+"</b> checked out to <b>"+cust+"</b>"+(person?" ("+person+")":"")
+        +" — "+site+(dd?", due "+fmt(dd):"")+(po?" · "+po:""), who:by});
+  flashUnit=d.unit;
+  document.getElementById("o-cust").value=""; document.getElementById("o-person").value="";
+  document.getElementById("o-site").value=""; document.getElementById("o-po").value="";
+  document.getElementById("o-dep").value="";
+  showOk("o-ok","Logged. <b>"+d.unit+"</b> is now out to "+cust+" — see it on the board and in the log.");
+  fillSelects(); drawTiles(); draw(); drawLog();
+};
+
+document.getElementById("i-go").onclick=function(){
+  var s=document.getElementById("i-unit");
+  if(s.value===""){ return; }
+  var i=parseInt(s.value,10), d=DATA[i];
+  var cond=document.getElementById("i-cond").value;
+  var notes=document.getElementById("i-notes").value.trim();
+  var by=document.getElementById("i-by").value.split(" — ")[0];
+  var hrs=document.getElementById("i-hrs").value.trim();
+  var wasFor=d.customer;
+  d.status = cond==="service" ? "service" : "ready";
+  d.site = cond==="service" ? (notes||"Awaiting service") : "Yard · returned";
+  d.customer="—"; d.outd="—"; d.days=0;
+  d.due = cond==="service" ? "TBD" : "—";
+  LOG.unshift({t:stamp(),k:cond==="service"?"svc":"in",
+    txt:"<b>"+d.unit+"</b> checked in from <b>"+wasFor+"</b>"
+        +(cond==="service"?" — sent to service"+(notes?": "+notes:""):" — good condition, back on the available list")
+        +(hrs?" · meter "+hrs:""), who:by});
+  flashUnit=d.unit;
+  document.getElementById("i-notes").value=""; document.getElementById("i-hrs").value="";
+  showOk("i-ok","Logged. <b>"+d.unit+"</b> is now "+(cond==="service"?"in service":"ready to go out again")+".");
+  fillSelects(); drawTiles(); draw(); drawLog();
+};
 
 var ths=document.querySelectorAll("th");
 for(var t2=0;t2<ths.length;t2++){
   ths[t2].onclick=function(){
     var k=this.dataset.k;
-    if(sortK===k){ sortAsc=!sortAsc; } else { sortK=k; sortAsc=true; }
+    if(sortK===k){sortAsc=!sortAsc;} else {sortK=k;sortAsc=true;}
     for(var o=0;o<ths.length;o++) ths[o].classList.remove("sorted");
     this.classList.add("sorted");
-    this.querySelector(".ar").innerHTML = sortAsc ? "&#9650;" : "&#9660;";
+    this.querySelector(".ar").innerHTML=sortAsc?"&#9650;":"&#9660;";
     draw();
   };
 }
@@ -289,7 +862,32 @@ document.getElementById("clear").onclick=function(){
   filter=null; document.getElementById("q").value=""; drawTiles(); draw();
 };
 
-drawTiles(); draw();
+var tabs=document.querySelectorAll(".tab");
+for(var v=0;v<tabs.length;v++){
+  tabs[v].onclick=function(){
+    for(var a=0;a<tabs.length;a++) tabs[a].classList.remove("on");
+    this.classList.add("on");
+    var views=document.querySelectorAll(".view");
+    for(var b=0;b<views.length;b++) views[b].classList.remove("on");
+    document.getElementById("v-"+this.dataset.v).classList.add("on");
+    document.getElementById("ih").textContent=HEAD[this.dataset.v][0];
+    document.getElementById("ip").textContent=HEAD[this.dataset.v][1];
+    window.scrollTo(0,0);
+  };
+}
+
+var pers=document.querySelectorAll(".per");
+for(var pz=0;pz<pers.length;pz++){
+  pers[pz].onclick=function(){
+    for(var a=0;a<pers.length;a++) pers[a].classList.remove("on");
+    this.classList.add("on");
+    drawOwner(this.dataset.p);
+  };
+}
+
+document.getElementById("o-out").value=today();
+document.getElementById("i-date").value=today();
+fillSelects(); drawTiles(); draw(); drawLog(); drawOwner("week");
 </script>
 </body>
 </html>
