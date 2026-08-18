@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rental Board — IN IT 2 FIX IT</title>
+<meta name="description" content="A live demo rental board: what's out, what's due back, what's overdue, and what's waiting on service. Built by IN IT 2 FIX IT.">
+<style>
+  :root{
+    --paper:#FFFFFF; --soft:#F5F8FC; --ink:#161F31; --body:#3C4658; --muted:#6B7688;
+    --blue:#1E4FD6; --deep:#12309B; --green-mid:#2F6B38;
+    --line:#D9E0EC; --faint:#EBEFF6; --zebra:#F7FAFE;
+    --out:#1E4FD6; --due:#B7791F; --over:#C0392B; --svc:#6B4FA8; --ready:#2F6B38;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--soft);color:var(--body);font-family:"Segoe UI",Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding-left:20px;padding-right:20px}
+
+  .ribbon{background:linear-gradient(160deg,#0E2878,#1E4FD6 55%,#12309B);color:#fff;padding:9px 0;font-size:13px}
+  .ribbon .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .ribbon b{font-weight:700}
+  .ribbon a{color:#fff;text-decoration:underline}
+
+  header{background:var(--paper);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 0}
+  .brandlogo{display:block;width:118px;height:auto}
+  .bar .co{font-size:12.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+
+  .intro{background:var(--paper);border-bottom:1px solid var(--line);padding:26px 0 30px}
+  .intro h1{color:var(--ink);font-size:clamp(21px,3vw,29px);font-weight:800;line-height:1.2}
+  .intro p{margin-top:9px;max-width:74ch;font-size:15.5px}
+
+  .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:22px 0 0}
+  .tile{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:15px 16px;cursor:pointer;transition:border-color .12s, box-shadow .12s;text-align:left;font-family:inherit}
+  .tile:hover{border-color:#AFC3E6;box-shadow:0 2px 8px rgba(22,31,49,.08)}
+  .tile.on{border-color:var(--blue);box-shadow:0 0 0 2px rgba(30,79,214,.16)}
+  .tile .n{font-size:31px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums}
+  .tile .l{font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-top:4px}
+  .t-out .n{color:var(--out)} .t-due .n{color:var(--due)} .t-over .n{color:var(--over)}
+  .t-svc .n{color:var(--svc)} .t-ready .n{color:var(--ready)}
+
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:26px 0 12px}
+  .toolbar input{
+    flex:1;min-width:210px;padding:9px 13px;border:1px solid var(--line);border-radius:7px;
+    font:inherit;font-size:14px;background:var(--paper);color:var(--ink);
+  }
+  .toolbar input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,79,214,.12)}
+  .toolbar .hint{font-size:12.5px;color:var(--muted)}
+  .btn-clear{padding:9px 15px;border:1px solid var(--line);background:var(--paper);border-radius:7px;font:inherit;font-size:13.5px;color:var(--body);cursor:pointer}
+  .btn-clear:hover{border-color:#AFC3E6}
+
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:940px}
+  th{
+    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);
+    text-align:left;padding:11px 14px;background:linear-gradient(180deg,#FAFCFE,#EDF1F8);
+    border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none;
+  }
+  th:hover{color:var(--ink)}
+  th .ar{opacity:.35;font-size:9px;margin-left:3px}
+  th.sorted .ar{opacity:1;color:var(--blue)}
+  td{padding:11px 14px;border-bottom:1px solid var(--faint);vertical-align:middle;font-size:14.5px}
+  tbody tr:nth-child(even) td{background:var(--zebra)}
+  tbody tr:hover td{background:#E8F0FE}
+  .unit{font-weight:700;color:var(--ink)}
+  .sub{display:block;font-size:12px;color:var(--muted);font-weight:400}
+  .num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .p-out{color:#12309B;background:#E4ECFD;border:1px solid #C3D5F8}
+  .p-due{color:#8A5B00;background:#FFF3D6;border:1px solid #F2DCA6}
+  .p-over{color:#96271B;background:#FDE4E1;border:1px solid #F5C2BB}
+  .p-svc{color:#4A3480;background:#EEE8FA;border:1px solid #D8CCF1}
+  .p-ready{color:#1E4B26;background:#E3F2E6;border:1px solid #C2E0C8}
+  .late{color:var(--over);font-weight:700}
+  .empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:15px}
+
+  .why{margin:30px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;position:relative;overflow:hidden}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#0F2B8C,#5B93F2,#0F2B8C)}
+  .card h3{font-size:15.5px;color:var(--ink);font-weight:800;margin-bottom:6px}
+  .card p{font-size:14px}
+
+  .close{margin:32px 0 0;background:linear-gradient(160deg,#0E2878,#1E4FD6 50%,#12309B);color:#fff;border-radius:11px;padding:34px 30px;text-align:center}
+  .close h2{font-size:clamp(19px,2.6vw,25px);font-weight:800;margin-bottom:10px}
+  .close p{color:#DCE6FB;max-width:60ch;margin:0 auto;font-size:15.5px}
+  .close a{display:inline-block;margin-top:18px;background:#fff;color:var(--deep);text-decoration:none;font-weight:800;padding:13px 30px;border-radius:7px;font-size:15.5px}
+  .close a:hover{background:#E8F0FE}
+
+  footer{padding:26px 0 40px;text-align:center;font-size:13px;color:var(--muted)}
+  footer a{color:var(--blue);text-decoration:none;font-weight:600}
+
+  @media (max-width:900px){ .tiles{grid-template-columns:repeat(3,1fr)} .why{grid-template-columns:1fr} }
+  @media (max-width:560px){ .tiles{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+
+<div class="ribbon">
+  <div class="wrap">
+    <span><b>Demo</b> — sample data, nothing real. Click the tiles, sort the columns, search the yard.</span>
+    <span>Built by <a href="https://init2fixit.com">IN IT 2 FIX IT</a></span>
+  </div>
+</div>
+
+<header>
+  <div class="wrap bar">
+    <img class="brandlogo" src="../logo-mini.webp" alt="IN IT 2 FIX IT">
+    <span class="co">Rental Board</span>
+  </div>
+</header>
+
+<div class="intro">
+  <div class="wrap">
+    <h1>Where is every unit, right now?</h1>
+    <p>One screen: what's out, what's due back today, what's overdue, what's stuck waiting on service, and what's ready to go out again. This is the question a spreadsheet can never answer on the first try — because by the time you've scrolled to the row, somebody has already called the yard to ask.</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="tiles" id="tiles"></div>
+
+  <div class="toolbar">
+    <input id="q" type="search" placeholder="Search unit, customer, job site, or event…" autocomplete="off">
+    <button class="btn-clear" id="clear">Show all</button>
+    <span class="hint" id="count"></span>
+  </div>
+
+  <div class="panel">
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th data-k="unit">Unit <span class="ar">&#9650;</span></th>
+            <th data-k="status">Status <span class="ar">&#9650;</span></th>
+            <th data-k="customer">Customer <span class="ar">&#9650;</span></th>
+            <th data-k="site">Job site / event <span class="ar">&#9650;</span></th>
+            <th data-k="outd">Went out <span class="ar">&#9650;</span></th>
+            <th data-k="due">Due back <span class="ar">&#9650;</span></th>
+            <th data-k="days">Days <span class="ar">&#9650;</span></th>
+            <th data-k="rate">Rate <span class="ar">&#9650;</span></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="why">
+    <div class="card">
+      <h3>Overdue units stop hiding</h3>
+      <p>Three units a month coming back a week late is real money nobody invoiced. On a spreadsheet it goes unnoticed until the customer finally returns it.</p>
+    </div>
+    <div class="card">
+      <h3>Service stops being a black hole</h3>
+      <p>A unit waiting on a part isn't available and isn't earning. That should be visible to whoever is answering the phone, not just to the shop.</p>
+    </div>
+    <div class="card">
+      <h3>The counter can answer instantly</h3>
+      <p>"Do you have a 40-foot boom for Thursday?" gets answered off this screen instead of a walk through the yard and two phone calls back.</p>
+    </div>
+  </div>
+
+  <div class="close">
+    <h2>Is this close to how your yard actually runs?</h2>
+    <p>This is a demo built to start a conversation. If it's close, the real version gets shaped around how you already work — your unit numbers, your statuses, your rates. If it's nowhere near, tell me that too. That's just as useful.</p>
+    <a href="mailto:kimberly@init2fixit.com?subject=About%20the%20rental%20board">Tell me what's wrong with it</a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    IN IT 2 FIX IT &nbsp;·&nbsp; New Port Richey, Florida &nbsp;·&nbsp;
+    <a href="https://init2fixit.com">init2fixit.com</a> &nbsp;·&nbsp;
+    <a href="mailto:kimberly@init2fixit.com">kimberly@init2fixit.com</a>
+  </div>
+</footer>
+
+<script>
+var DATA=[
+ {unit:"CAT 259D3",sub:"Track loader · #TL-1142",status:"overdue",customer:"Brennan Site Works",site:"Oakmont Ridge Ph. 2",outd:"Jul 28",due:"Aug 11",days:6,rate:"$385/day"},
+ {unit:"JLG 600AJ",sub:"60 ft boom lift · #BL-0087",status:"out",customer:"Vertex Electrical",site:"County Annex reroof",outd:"Aug 12",due:"Aug 22",days:0,rate:"$520/day"},
+ {unit:"Genie GS-1930",sub:"19 ft scissor · #SL-0231",status:"due",customer:"Halstead Interiors",site:"Bayview Med Suite 300",outd:"Aug 10",due:"Today",days:0,rate:"$145/day"},
+ {unit:"Bobcat E35",sub:"Mini excavator · #EX-0455",status:"service",customer:"—",site:"Hydraulic line · part on order",outd:"—",due:"Aug 20 est.",days:0,rate:"$310/day"},
+ {unit:"Multiquip DCA45",sub:"45 kVA generator · #GN-0912",status:"out",customer:"Riverside Events LLC",site:"Harvest Fest main stage",outd:"Aug 14",due:"Aug 19",days:0,rate:"$275/day"},
+ {unit:"Wacker RD12",sub:"Roller · #RL-0166",status:"overdue",customer:"Pinnacle Paving",site:"Route 19 shoulder",outd:"Jul 30",due:"Aug 09",days:8,rate:"$240/day"},
+ {unit:"Ditch Witch SK800",sub:"Mini skid · #MS-0303",status:"ready",customer:"—",site:"Yard · row C",outd:"—",due:"—",days:0,rate:"$295/day"},
+ {unit:"20x40 Frame Tent",sub:"White · #TN-2210",status:"out",customer:"Coleman / Ruiz wedding",site:"Sandhill Barn",outd:"Aug 15",due:"Aug 18",days:0,rate:"$680/event"},
+ {unit:"Toyota 8FGU25",sub:"5,000 lb forklift · #FK-0074",status:"due",customer:"Gulf Coast Millwork",site:"Warehouse 4 inventory",outd:"Aug 04",due:"Today",days:0,rate:"$210/day"},
+ {unit:"Skyjack SJ6832",sub:"32 ft RT scissor · #SL-0288",status:"service",customer:"—",site:"Annual inspection · bay 2",outd:"—",due:"Aug 19 est.",days:0,rate:"$330/day"},
+ {unit:"Husqvarna FS400",sub:"Concrete saw · #CS-0521",status:"overdue",customer:"Delgado Concrete",site:"Publix pad cut",outd:"Aug 01",due:"Aug 08",days:9,rate:"$165/day"},
+ {unit:"400 Padded Chairs",sub:"White garden · #CH-4400",status:"out",customer:"Tampa Bay Rotary",site:"Annual gala · Convention Ctr",outd:"Aug 16",due:"Aug 18",days:0,rate:"$3.25/ea"},
+ {unit:"JLG 1930ES",sub:"19 ft scissor · #SL-0244",status:"ready",customer:"—",site:"Yard · row A",outd:"—",due:"—",days:0,rate:"$145/day"},
+ {unit:"Kubota SVL75",sub:"Track loader · #TL-1188",status:"out",customer:"Brennan Site Works",site:"Oakmont Ridge Ph. 2",outd:"Aug 13",due:"Aug 27",days:0,rate:"$410/day"},
+ {unit:"Airman PDS185",sub:"185 CFM compressor · #AC-0130",status:"due",customer:"Sunstate Plumbing",site:"Hillcrest main break",outd:"Aug 09",due:"Today",days:0,rate:"$155/day"},
+ {unit:"30x60 Pole Tent",sub:"White · #TN-3060",status:"service",customer:"—",site:"Torn panel · in repair",outd:"—",due:"Aug 21 est.",days:0,rate:"$1,150/event"},
+ {unit:"Genie Z-45/25",sub:"45 ft articulating boom · #BL-0102",status:"out",customer:"Meridian Facilities",site:"Distribution ctr lighting",outd:"Aug 11",due:"Aug 25",days:0,rate:"$465/day"},
+ {unit:"Portable Dance Floor",sub:"24x24 oak · #DF-0012",status:"ready",customer:"—",site:"Warehouse · bay 3",outd:"—",due:"—",days:0,rate:"$540/event"},
+ {unit:"Case 580N",sub:"Backhoe · #BH-0059",status:"overdue",customer:"Keystone Utilities",site:"Sewer tie-in, Elm St",outd:"Jul 21",due:"Aug 04",days:13,rate:"$495/day"},
+ {unit:"Allmand Night-Lite",sub:"Light tower · #LT-0207",status:"out",customer:"Riverside Events LLC",site:"Harvest Fest parking",outd:"Aug 14",due:"Aug 19",days:0,rate:"$135/day"}
+];
+
+var META={
+  out:{label:"Out",cls:"p-out"}, due:{label:"Due today",cls:"p-due"},
+  overdue:{label:"Overdue",cls:"p-over"}, service:{label:"In service",cls:"p-svc"},
+  ready:{label:"Ready",cls:"p-ready"}
+};
+var TILES=[
+  {k:"out",l:"Out",c:"t-out"},{k:"due",l:"Due today",c:"t-due"},
+  {k:"overdue",l:"Overdue",c:"t-over"},{k:"service",l:"In service",c:"t-svc"},
+  {k:"ready",l:"Ready",c:"t-ready"}
+];
+
+var filter=null, sortK=null, sortAsc=true;
+
+function drawTiles(){
+  var html="";
+  for(var i=0;i<TILES.length;i++){
+    var t=TILES[i], n=0;
+    for(var j=0;j<DATA.length;j++){ if(DATA[j].status===t.k) n++; }
+    html += '<button class="tile '+t.c+(filter===t.k?' on':'')+'" data-f="'+t.k+'">'
+          + '<div class="n">'+n+'</div><div class="l">'+t.l+'</div></button>';
+  }
+  document.getElementById("tiles").innerHTML=html;
+  var btns=document.querySelectorAll(".tile");
+  for(var b=0;b<btns.length;b++){
+    btns[b].onclick=function(){
+      filter = (filter===this.dataset.f) ? null : this.dataset.f;
+      drawTiles(); draw();
+    };
+  }
+}
+
+function draw(){
+  var q=document.getElementById("q").value.trim().toLowerCase();
+  var rows=[];
+  for(var i=0;i<DATA.length;i++){
+    var d=DATA[i];
+    if(filter && d.status!==filter) continue;
+    if(q && (d.unit+" "+d.sub+" "+d.customer+" "+d.site).toLowerCase().indexOf(q)===-1) continue;
+    rows.push(d);
+  }
+  if(sortK){
+    rows.sort(function(a,b){
+      var x=a[sortK], y=b[sortK];
+      if(typeof x==="number" && typeof y==="number") return sortAsc ? x-y : y-x;
+      x=String(x).toLowerCase(); y=String(y).toLowerCase();
+      return sortAsc ? x.localeCompare(y) : y.localeCompare(x);
+    });
+  }
+  var tb=document.getElementById("rows");
+  if(!rows.length){
+    tb.innerHTML='<tr><td colspan="8" class="empty">Nothing matches that. <b>Show all</b> puts the yard back.</td></tr>';
+  } else {
+    var out="";
+    for(var r=0;r<rows.length;r++){
+      var d2=rows[r], m=META[d2.status];
+      var days = d2.status==="overdue" ? '<span class="late">'+d2.days+' late</span>' : "—";
+      out += '<tr>'
+        + '<td><span class="unit">'+d2.unit+'</span><span class="sub">'+d2.sub+'</span></td>'
+        + '<td><span class="pill '+m.cls+'">'+m.label+'</span></td>'
+        + '<td>'+d2.customer+'</td>'
+        + '<td>'+d2.site+'</td>'
+        + '<td class="num">'+d2.outd+'</td>'
+        + '<td class="num">'+d2.due+'</td>'
+        + '<td class="num">'+days+'</td>'
+        + '<td class="num">'+d2.rate+'</td>'
+        + '</tr>';
+    }
+    tb.innerHTML=out;
+  }
+  document.getElementById("count").textContent =
+    (rows.length===DATA.length) ? DATA.length+" units" : rows.length+" of "+DATA.length+" units";
+}
+
+var ths=document.querySelectorAll("th");
+for(var t2=0;t2<ths.length;t2++){
+  ths[t2].onclick=function(){
+    var k=this.dataset.k;
+    if(sortK===k){ sortAsc=!sortAsc; } else { sortK=k; sortAsc=true; }
+    for(var o=0;o<ths.length;o++) ths[o].classList.remove("sorted");
+    this.classList.add("sorted");
+    this.querySelector(".ar").innerHTML = sortAsc ? "&#9650;" : "&#9660;";
+    draw();
+  };
+}
+document.getElementById("q").addEventListener("input",draw);
+document.getElementById("clear").onclick=function(){
+  filter=null; document.getElementById("q").value=""; drawTiles(); draw();
+};
+
+drawTiles(); draw();
+</script>
+</body>
+</html>
