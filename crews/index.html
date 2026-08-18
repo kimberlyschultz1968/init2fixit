@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crew Board — IN IT 2 FIX IT</title>
+<meta name="description" content="A live demo for commercial landscape maintenance: today's routes, proof the crew was there, and what every property is really costing you. Built by IN IT 2 FIX IT.">
+<style>
+  :root{
+    --paper:#FFFFFF; --soft:#F5F8FC; --ink:#161F31; --body:#3C4658; --muted:#6B7688;
+    --blue:#1E4FD6; --deep:#12309B; --green:#245229; --green-mid:#2F6B38;
+    --line:#D9E0EC; --faint:#EBEFF6; --zebra:#F7FAFE;
+    --done:#2F6B38; --onsite:#1E4FD6; --behind:#B7791F; --skip:#C0392B; --pending:#6B7688;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--soft);color:var(--body);font-family:"Segoe UI",Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding-left:20px;padding-right:20px}
+
+  .ribbon{background:linear-gradient(160deg,#0E2878,#1E4FD6 55%,#12309B);color:#fff;padding:9px 0;font-size:13px}
+  .ribbon .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .ribbon b{font-weight:700}
+  .ribbon a{color:#fff;text-decoration:underline}
+
+  header{background:var(--paper);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 0}
+  .brandlogo{display:block;width:118px;height:auto}
+  .bar .co{font-size:12.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+
+  .tabs{background:var(--paper);border-bottom:1px solid var(--line)}
+  .tabs .wrap{display:flex;gap:4px;flex-wrap:wrap}
+  .tab{padding:13px 20px;font:inherit;font-size:14.5px;font-weight:700;color:var(--muted);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer}
+  .tab:hover{color:var(--ink)}
+  .tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+  .intro{background:var(--paper);border-bottom:1px solid var(--line);padding:24px 0 28px}
+  .intro h1{color:var(--ink);font-size:clamp(20px,2.8vw,28px);font-weight:800;line-height:1.2}
+  .intro p{margin-top:8px;max-width:78ch;font-size:15.5px}
+
+  .view{display:none}
+  .view.on{display:block}
+
+  .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:22px 0 0}
+  .tile{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:15px 16px;cursor:pointer;transition:border-color .12s,box-shadow .12s;text-align:left;font-family:inherit}
+  .tile:hover{border-color:#AFC3E6;box-shadow:0 2px 8px rgba(22,31,49,.08)}
+  .tile.on{border-color:var(--blue);box-shadow:0 0 0 2px rgba(30,79,214,.16)}
+  .tile .n{font-size:31px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums}
+  .tile .l{font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-top:4px}
+  .t-done .n{color:var(--done)} .t-onsite .n{color:var(--onsite)} .t-behind .n{color:var(--behind)}
+  .t-skip .n{color:var(--skip)} .t-pending .n{color:var(--pending)}
+
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:24px 0 12px}
+  .toolbar input[type=search]{flex:1;min-width:210px;padding:9px 13px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:14px;background:var(--paper);color:var(--ink)}
+  .toolbar .hint{font-size:12.5px;color:var(--muted)}
+  .btn-clear{padding:9px 15px;border:1px solid var(--line);background:var(--paper);border-radius:7px;font:inherit;font-size:13.5px;color:var(--body);cursor:pointer}
+  .btn-clear:hover{border-color:#AFC3E6}
+
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:980px}
+  th{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);text-align:left;padding:11px 14px;background:linear-gradient(180deg,#FAFCFE,#EDF1F8);border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+  th:hover{color:var(--ink)}
+  th .ar{opacity:.35;font-size:9px;margin-left:3px}
+  th.sorted .ar{opacity:1;color:var(--blue)}
+  td{padding:11px 14px;border-bottom:1px solid var(--faint);vertical-align:middle;font-size:14.5px}
+  tbody tr:nth-child(even) td{background:var(--zebra)}
+  tbody tr:hover td{background:#E8F0FE}
+  tbody tr.flash td{background:#FFF6D9;transition:background 2.4s}
+  .prop{font-weight:700;color:var(--ink)}
+  .sub{display:block;font-size:12px;color:var(--muted);font-weight:400}
+  .num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .p-done{color:#1E4B26;background:#E3F2E6;border:1px solid #C2E0C8}
+  .p-onsite{color:#12309B;background:#E4ECFD;border:1px solid #C3D5F8}
+  .p-behind{color:#8A5B00;background:#FFF3D6;border:1px solid #F2DCA6}
+  .p-skip{color:#96271B;background:#FDE4E1;border:1px solid #F5C2BB}
+  .p-pending{color:#4A5364;background:#EEF1F6;border:1px solid #DCE2EC}
+  .over{color:var(--skip);font-weight:700}
+  .under{color:var(--done);font-weight:700}
+  .cam{color:var(--muted);font-size:12.5px}
+  .empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:15px}
+
+  .formwrap{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:24px}
+  .fcard{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .fhead{padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#FAFCFE,#EDF1F8)}
+  .fhead h2{font-size:16px;font-weight:800;color:var(--ink)}
+  .fhead p{font-size:13px;color:var(--muted);margin-top:2px}
+  .fbody{padding:20px}
+  .fld{margin-bottom:14px}
+  .fld label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:5px}
+  .fld input,.fld select,.fld textarea{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:14.5px;background:var(--paper);color:var(--ink)}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,79,214,.12)}
+  .fld textarea{resize:vertical;min-height:58px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .chk{display:flex;align-items:flex-start;gap:9px;margin-bottom:11px;font-size:14px}
+  .chk input{width:17px;height:17px;accent-color:var(--blue);flex:none;margin-top:2px}
+  .chk label{margin:0;text-transform:none;letter-spacing:0;font-size:14px;font-weight:400;color:var(--body)}
+  .svcs{border:1px solid var(--line);border-radius:8px;padding:13px 15px;margin-bottom:14px;background:#FBFCFE}
+  .svcs .st{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:9px}
+  .go{width:100%;padding:13px 20px;border-radius:7px;border:1px solid #0F2B8C;cursor:pointer;font:inherit;font-size:15px;font-weight:800;color:#fff;letter-spacing:.02em;background:linear-gradient(180deg,#6FA5F7,#2F6FE8 45%,#1E4FD6 52%,#12309B);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2px 8px rgba(18,48,155,.24);text-shadow:0 1px 2px rgba(6,16,60,.45)}
+  .go:hover{background:linear-gradient(180deg,#83B3F9,#4A85F5 45%,#2F6FE8 52%,#1E4FD6)}
+  .go.g{border-color:#122A16;background:linear-gradient(180deg,#57A264,#2F6B38 48%,#1E4B26 55%,#16351B);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 8px rgba(22,53,27,.24)}
+  .go.g:hover{background:linear-gradient(180deg,#68B275,#3B7C45 48%,#245229 55%,#1E4B26)}
+  .note{margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .ok{margin-top:12px;padding:11px 14px;border-radius:7px;background:#E3F2E6;border:1px solid #C2E0C8;color:#1E4B26;font-size:14px;font-weight:600;display:none}
+  .ok.show{display:block}
+
+  .log{margin-top:24px;background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .logrow{display:flex;gap:16px;padding:14px 20px;border-bottom:1px solid var(--faint);align-items:flex-start}
+  .logrow:last-child{border-bottom:none}
+  .logrow:nth-child(even){background:var(--zebra)}
+  .logrow .when{flex:none;width:150px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:2px}
+  .logrow .what{flex:1;font-size:14.5px}
+  .logrow .what b{color:var(--ink)}
+  .logrow .who{flex:none;font-size:12.5px;color:var(--muted);text-align:right;padding-top:2px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
+  .d-done{background:var(--done)} .d-iss{background:var(--behind)} .d-chem{background:#6B4FA8} .d-skip{background:var(--skip)}
+
+  .periods{display:flex;margin:24px 0 0;border:1px solid var(--line);border-radius:8px;overflow:hidden;width:fit-content;background:var(--paper)}
+  .per{padding:10px 22px;font:inherit;font-size:14px;font-weight:700;color:var(--muted);background:var(--paper);border:none;border-right:1px solid var(--line);cursor:pointer}
+  .per:last-child{border-right:none}
+  .per:hover{color:var(--ink);background:#F1F5FA}
+  .per.on{color:#fff;background:linear-gradient(180deg,#2F6FE8,#1E4FD6 52%,#12309B)}
+
+  .hero{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:26px 28px;margin-top:16px;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .hero .lab{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .hero .fig{font-size:clamp(38px,6vw,58px);font-weight:800;color:var(--ink);line-height:1.05;font-variant-numeric:tabular-nums;margin-top:4px}
+  .hero .delta{font-size:14.5px;margin-top:6px;color:var(--muted)}
+  .hero .delta b{color:var(--done);font-weight:700}
+  .hero .delta b.dn{color:var(--skip)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  .kpi{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:16px 18px}
+  .kpi .l{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .kpi .v{font-size:25px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:3px;line-height:1.1}
+  .kpi .s{font-size:12.5px;color:var(--muted);margin-top:3px}
+
+  .chartcard{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:22px 24px 18px;margin-top:14px;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .chartcard h3{font-size:15.5px;font-weight:800;color:var(--ink)}
+  .chartcard .cs{font-size:13px;color:var(--muted);margin-top:2px;margin-bottom:16px}
+  .plot{position:relative;height:210px;margin-left:56px;border-bottom:1px solid var(--line)}
+  .gl{position:absolute;left:0;right:0;height:1px;background:var(--faint)}
+  .gl span{position:absolute;left:-56px;top:-8px;width:48px;text-align:right;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .cols{position:absolute;inset:0;display:flex;align-items:flex-end}
+  .slot{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;position:relative}
+  .col{width:100%;max-width:24px;background:#1E4FD6;border-radius:4px 4px 0 0;transition:background .12s}
+  .slot:hover .col{background:#12309B}
+  .xlabels{display:flex;margin-left:56px;margin-top:7px}
+  .xlabels div{flex:1;text-align:center;font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden}
+  .tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#161F31;color:#fff;padding:7px 11px;border-radius:6px;font-size:12.5px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .1s;z-index:5;font-variant-numeric:tabular-nums}
+  .slot:hover .tip{opacity:1}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .brow{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+  .brow .bn{flex:none;width:150px;font-size:13.5px;color:var(--body)}
+  .brow .bt{flex:1;height:22px;background:var(--faint);border-radius:4px;overflow:hidden}
+  .brow .bf{height:100%;background:#1E4FD6;border-radius:0 4px 4px 0}
+  .brow .bv{flex:none;width:76px;text-align:right;font-size:13.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ctable{width:100%;border-collapse:collapse;min-width:0}
+  .ctable td{padding:9px 0;border-bottom:1px solid var(--faint);font-size:14px}
+  .ctable tr:last-child td{border-bottom:none}
+  .ctable td:last-child{text-align:right;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ctable td .cs2{display:block;font-size:12px;color:var(--muted)}
+
+  .leak{background:linear-gradient(180deg,#FFF9EC,#FFF4DC);border:1px solid #F2DCA6;border-radius:10px;padding:20px 24px;margin-top:14px}
+  .leak h3{font-size:15.5px;font-weight:800;color:#8A5B00;margin-bottom:12px}
+  .leak .lg{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .leak .li .v{font-size:23px;font-weight:800;color:#96271B;font-variant-numeric:tabular-nums;line-height:1.1}
+  .leak .li .l{font-size:13px;color:#8A5B00;margin-top:3px}
+
+  .why{margin:30px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;position:relative;overflow:hidden}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#122A16,#4E9A5C,#122A16)}
+  .card h3{font-size:15.5px;color:var(--ink);font-weight:800;margin-bottom:6px}
+  .card p{font-size:14px}
+
+  .close{margin:32px 0 0;background:linear-gradient(160deg,#0E2878,#1E4FD6 50%,#12309B);color:#fff;border-radius:11px;padding:34px 30px;text-align:center}
+  .close h2{font-size:clamp(19px,2.6vw,25px);font-weight:800;margin-bottom:10px}
+  .close p{color:#DCE6FB;max-width:62ch;margin:0 auto;font-size:15.5px}
+  .close a{display:inline-block;margin-top:18px;background:#fff;color:var(--deep);text-decoration:none;font-weight:800;padding:13px 30px;border-radius:7px;font-size:15.5px}
+  .close a:hover{background:#E8F0FE}
+
+  footer{padding:26px 0 40px;text-align:center;font-size:13px;color:var(--muted)}
+  footer a{color:var(--blue);text-decoration:none;font-weight:600}
+
+  @media (max-width:900px){
+    .tiles{grid-template-columns:repeat(3,1fr)} .why{grid-template-columns:1fr} .formwrap{grid-template-columns:1fr}
+    .logrow{flex-wrap:wrap;gap:6px} .logrow .when{width:auto} .logrow .who{text-align:left}
+    .kpis{grid-template-columns:repeat(2,1fr)} .split{grid-template-columns:1fr} .leak .lg{grid-template-columns:1fr;gap:14px}
+  }
+  @media (max-width:560px){
+    .tiles{grid-template-columns:repeat(2,1fr)} .two{grid-template-columns:1fr}
+    .per{padding:10px 13px;font-size:13px} .brow .bn{width:104px}
+    .plot{margin-left:46px} .gl span{left:-46px;width:40px} .xlabels{margin-left:46px}
+  }
+</style>
+</head>
+<body>
+
+<div class="ribbon">
+  <div class="wrap">
+    <span><b>Demo</b> — sample data. Close out a stop, log an issue, and watch the board, the log and the numbers update.</span>
+    <span>Built by <a href="https://init2fixit.com">IN IT 2 FIX IT</a></span>
+  </div>
+</div>
+
+<header>
+  <div class="wrap bar">
+    <img class="brandlogo" src="../logo-mini.webp" alt="IN IT 2 FIX IT">
+    <span class="co">Crew Board</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="wrap">
+    <button class="tab on" data-v="board">Today's routes</button>
+    <button class="tab" data-v="desk">Crew check-in</button>
+    <button class="tab" data-v="logv">Activity log</button>
+    <button class="tab" data-v="owner">Owner's board</button>
+  </div>
+</div>
+
+<div class="intro">
+  <div class="wrap">
+    <h1 id="ih">Which crews are where, and what's actually done?</h1>
+    <p id="ip">Every property on today's schedule, which crew has it, whether it's finished, and how the hours compare to what the contract allows. When a property manager calls Thursday asking whether anyone showed up Tuesday, the answer is on this screen instead of in a truck somewhere.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ========= BOARD ========= -->
+  <div class="view on" id="v-board">
+    <div class="tiles" id="tiles"></div>
+
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Search property, crew, service, or account manager…" autocomplete="off">
+      <button class="btn-clear" id="clear">Show all</button>
+      <span class="hint" id="count"></span>
+    </div>
+
+    <div class="panel">
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th data-k="prop">Property <span class="ar">&#9650;</span></th>
+              <th data-k="status">Status <span class="ar">&#9650;</span></th>
+              <th data-k="crew">Crew <span class="ar">&#9650;</span></th>
+              <th data-k="svc">Service <span class="ar">&#9650;</span></th>
+              <th data-k="arr">On site <span class="ar">&#9650;</span></th>
+              <th data-k="hrs">Hours <span class="ar">&#9650;</span></th>
+              <th data-k="bud">Budget <span class="ar">&#9650;</span></th>
+              <th data-k="pics">Proof <span class="ar">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="why">
+      <div class="card">
+        <h3>"Were you here Tuesday?"</h3>
+        <p>The single most common call a landscape office gets. Right now it costs a radio call, a crew leader's memory, and a callback. Here it's a timestamp and photos.</p>
+      </div>
+      <div class="card">
+        <h3>Hours over budget is where margin dies</h3>
+        <p>The contract is a fixed price. Every hour a crew spends over the budgeted time on a property comes straight out of profit — and on paper route sheets nobody ever adds it up.</p>
+      </div>
+      <div class="card">
+        <h3>Skipped stops stop disappearing</h3>
+        <p>Rained out, gate locked, dog in the yard. If nobody logs it, it never gets made up — and the property manager is the one who notices.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========= DESK ========= -->
+  <div class="view" id="v-desk">
+    <div class="formwrap">
+
+      <div class="fcard">
+        <div class="fhead">
+          <h2>Close out a stop</h2>
+          <p>What the crew leader taps on a phone before pulling off the property.</p>
+        </div>
+        <div class="fbody">
+          <div class="fld">
+            <label>Property</label>
+            <select id="c-prop"></select>
+          </div>
+          <div class="two">
+            <div class="fld"><label>Arrived</label><input id="c-arr" placeholder="7:40 am"></div>
+            <div class="fld"><label>Departed</label><input id="c-dep" placeholder="9:15 am"></div>
+          </div>
+          <div class="svcs">
+            <div class="st">Work completed</div>
+            <div class="chk"><input type="checkbox" id="s1" checked><label for="s1">Mowing and edging</label></div>
+            <div class="chk"><input type="checkbox" id="s2" checked><label for="s2">Blow down hard surfaces</label></div>
+            <div class="chk"><input type="checkbox" id="s3"><label for="s3">Bed detail and weeding</label></div>
+            <div class="chk"><input type="checkbox" id="s4"><label for="s4">Irrigation walk-through</label></div>
+            <div class="chk" style="margin-bottom:0"><input type="checkbox" id="s5"><label for="s5">Chemical application (logs applicator, product and rate)</label></div>
+          </div>
+          <div class="two">
+            <div class="fld"><label>Photos attached</label><input id="c-pics" value="4"></div>
+            <div class="fld"><label>Crew</label>
+              <select id="c-crew">
+                <option>Crew 1 — Hector M.</option>
+                <option>Crew 2 — Dwayne P.</option>
+                <option>Crew 3 — Andre L.</option>
+                <option>Crew 4 — Tomas R.</option>
+                <option>Crew 5 — irrigation, Nate S.</option>
+              </select>
+            </div>
+          </div>
+          <div class="fld">
+            <label>Anything the office should know</label>
+            <textarea id="c-note" placeholder="Sprinkler head broken at the east entrance — quoted repair worth writing up"></textarea>
+          </div>
+          <button class="go g" id="c-go">Mark complete</button>
+          <div class="ok" id="c-ok"></div>
+          <p class="note">The stop turns green on the board with the crew, the times, the hours against budget, and the photos attached. Nobody retypes a route sheet at the end of the day.</p>
+        </div>
+      </div>
+
+      <div class="fcard">
+        <div class="fhead">
+          <h2>Log an issue or extra work</h2>
+          <p>The part that usually dies in a text message to the account manager.</p>
+        </div>
+        <div class="fbody">
+          <div class="fld">
+            <label>Property</label>
+            <select id="i-prop"></select>
+          </div>
+          <div class="fld">
+            <label>What kind</label>
+            <select id="i-kind">
+              <option value="skip">Couldn't service — needs to be made up</option>
+              <option value="iss">Problem found on site</option>
+              <option value="enh">Extra work worth quoting</option>
+            </select>
+          </div>
+          <div class="fld">
+            <label>Details</label>
+            <textarea id="i-note" placeholder="Two dead shrubs at the monument sign. Replacement plus mulch, roughly $340."></textarea>
+          </div>
+          <div class="two">
+            <div class="fld"><label>Estimated value</label><input id="i-val" placeholder="$340"></div>
+            <div class="fld"><label>Photos attached</label><input id="i-pics" value="2"></div>
+          </div>
+          <div class="fld">
+            <label>Send to</label>
+            <select id="i-to">
+              <option>Karen B. — account manager</option>
+              <option>Ray T. — branch manager</option>
+              <option>Office — schedule the make-up</option>
+            </select>
+          </div>
+          <div class="fld">
+            <label>Logged by</label>
+            <select id="i-by">
+              <option>Hector M. — Crew 1</option>
+              <option>Dwayne P. — Crew 2</option>
+              <option>Andre L. — Crew 3</option>
+              <option>Nate S. — irrigation</option>
+            </select>
+          </div>
+          <button class="go" id="i-go">Send it in</button>
+          <div class="ok" id="i-ok"></div>
+          <p class="note">Extra work gets a dollar value and a photo the moment the crew sees it — instead of being remembered three weeks later, if at all. That backlog is on the owner's board.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========= LOG ========= -->
+  <div class="view" id="v-logv">
+    <div class="log" id="logbox"></div>
+    <div class="why" style="margin-top:22px">
+      <div class="card">
+        <h3>This is the answer to the phone call</h3>
+        <p>Property, crew, arrival and departure time, what was done, and photos. Not to argue with the customer — to answer them in ten seconds and be right.</p>
+      </div>
+      <div class="card">
+        <h3>Chemical applications are a legal record</h3>
+        <p>Applicator, product, rate and date, captured at the property instead of reconstructed from memory at the end of the week when an inspector asks.</p>
+      </div>
+      <div class="card">
+        <h3>Nothing gets written twice</h3>
+        <p>Logged once by the crew leader on a phone. It feeds the board, the customer's proof of service, the payroll hours and the extra-work backlog.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========= OWNER ========= -->
+  <div class="view" id="v-owner">
+    <div class="periods" id="periods">
+      <button class="per" data-p="day">Today</button>
+      <button class="per on" data-p="week">This week</button>
+      <button class="per" data-p="month">This month</button>
+      <button class="per" data-p="year">This year</button>
+    </div>
+
+    <div class="hero">
+      <div class="lab" id="h-lab">Revenue — this week</div>
+      <div class="fig" id="h-fig">$0</div>
+      <div class="delta" id="h-del"></div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="l">Stops completed</div><div class="v" id="k-stops">—</div><div class="s" id="k-stopss">—</div></div>
+      <div class="kpi"><div class="l">Hours vs budget</div><div class="v" id="k-hrs">—</div><div class="s" id="k-hrss">—</div></div>
+      <div class="kpi"><div class="l">Extra work quoted</div><div class="v" id="k-enh">—</div><div class="s" id="k-enhs">—</div></div>
+      <div class="kpi"><div class="l">Revenue per crew day</div><div class="v" id="k-rcd">—</div><div class="s">across all crews</div></div>
+    </div>
+
+    <div class="chartcard">
+      <h3 id="c-title">Revenue by day</h3>
+      <div class="cs" id="c-sub">Hover any column for the exact figure.</div>
+      <div class="plot" id="plot"></div>
+      <div class="xlabels" id="xlab"></div>
+    </div>
+
+    <div class="split">
+      <div class="chartcard" style="margin-top:0">
+        <h3>Where the money came from</h3>
+        <div class="cs">Contract maintenance versus everything else.</div>
+        <div id="cats"></div>
+      </div>
+      <div class="chartcard" style="margin-top:0">
+        <h3>Biggest accounts</h3>
+        <div class="cs">By revenue for the period shown.</div>
+        <table class="ctable"><tbody id="custs"></tbody></table>
+      </div>
+    </div>
+
+    <div class="leak">
+      <h3>What's leaking right now</h3>
+      <div class="lg">
+        <div class="li"><div class="v">$6,480</div><div class="l">Crew hours over contract budget this month — 4 properties running long every visit</div></div>
+        <div class="li"><div class="v">$11,900</div><div class="l">Extra work the crews found and nobody quoted — 17 items sitting in the backlog</div></div>
+        <div class="li"><div class="v">$2,240</div><div class="l">Skipped stops never made up — 8 visits billed but not delivered</div></div>
+      </div>
+    </div>
+
+    <div class="why">
+      <div class="card">
+        <h3>The extra work is the growth</h3>
+        <p>Crews spot dead shrubs, broken heads and drainage problems every week. On most operations that walks off the property with them. Captured, it's the highest-margin revenue in the business.</p>
+      </div>
+      <div class="card">
+        <h3>Over-budget properties have names</h3>
+        <p>Every fixed-price contract has one or two sites quietly eating the margin. This tells you which ones, so you can re-price them at renewal instead of guessing.</p>
+      </div>
+      <div class="card">
+        <h3>Built from what the crews already logged</h3>
+        <p>Nobody assembles this report. It's the same taps the crew leader made on the phone, added up.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="close">
+    <h2>Is this close to how your operation actually runs?</h2>
+    <p>This is a demo built to start a conversation. If it's close, the real version gets shaped around your properties, your crews, your services and your contract terms. If it's nowhere near, tell me that too — that's just as useful.</p>
+    <a href="mailto:kimberly@init2fixit.com?subject=About%20the%20crew%20board">Tell me what's wrong with it</a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    IN IT 2 FIX IT &nbsp;·&nbsp; New Port Richey, Florida &nbsp;·&nbsp;
+    <a href="https://init2fixit.com">init2fixit.com</a> &nbsp;·&nbsp;
+    <a href="mailto:kimberly@init2fixit.com">kimberly@init2fixit.com</a>
+  </div>
+</footer>
+
+<script>
+var DATA=[
+ {prop:"Westlake Commons HOA",sub:"142 units · Karen B.",status:"done",crew:"Crew 1 — Hector M.",svc:"Mow, edge, blow",arr:"6:50–8:35 am",hrs:5.2,bud:5.0,pics:6},
+ {prop:"Sandpiper Office Park",sub:"3 buildings · Karen B.",status:"done",crew:"Crew 1 — Hector M.",svc:"Mow, bed detail",arr:"8:55–10:40 am",hrs:5.1,bud:6.0,pics:4},
+ {prop:"Northgate Retail Center",sub:"Anchor + 14 tenants · Ray T.",status:"onsite",crew:"Crew 2 — Dwayne P.",svc:"Mow, edge, blow",arr:"9:20 am –",hrs:0,bud:4.5,pics:0},
+ {prop:"Harbour Pointe HOA",sub:"88 units · Karen B.",status:"behind",crew:"Crew 2 — Dwayne P.",svc:"Mow, bed detail",arr:"scheduled 11:00",hrs:0,bud:6.5,pics:0},
+ {prop:"St. Andrews Medical Plaza",sub:"2 buildings · Ray T.",status:"done",crew:"Crew 3 — Andre L.",svc:"Mow, detail, mulch top-off",arr:"7:05–11:20 am",hrs:12.6,bud:9.0,pics:8},
+ {prop:"Cypress Trace HOA",sub:"210 units · Karen B.",status:"skip",crew:"Crew 3 — Andre L.",svc:"Mow, edge",arr:"gate code failed",hrs:0,bud:7.0,pics:1},
+ {prop:"Meridian Business Campus",sub:"5 buildings · Ray T.",status:"pending",crew:"Crew 4 — Tomas R.",svc:"Mow, edge, blow",arr:"scheduled 12:30",hrs:0,bud:8.0,pics:0},
+ {prop:"Bayfront Corporate Center",sub:"Class A tower · Ray T.",status:"done",crew:"Crew 4 — Tomas R.",svc:"Detail, seasonal color",arr:"6:45–10:10 am",hrs:10.2,bud:10.0,pics:7},
+ {prop:"Live Oak Village HOA",sub:"64 units · Karen B.",status:"onsite",crew:"Crew 5 — Nate S.",svc:"Irrigation audit, zones 1–12",arr:"8:15 am –",hrs:0,bud:4.0,pics:2},
+ {prop:"Palmetto Crossing",sub:"Retail strip · Ray T.",status:"pending",crew:"Crew 5 — Nate S.",svc:"Irrigation repair follow-up",arr:"scheduled 1:00",hrs:0,bud:2.5,pics:0},
+ {prop:"Grand Reserve HOA",sub:"176 units · Karen B.",status:"done",crew:"Crew 1 — Hector M.",svc:"Mow, edge, blow",arr:"11:00 am–1:15 pm",hrs:6.4,bud:6.5,pics:5},
+ {prop:"Turnbury Lakes HOA",sub:"120 units · Karen B.",status:"behind",crew:"Crew 4 — Tomas R.",svc:"Mow, bed detail",arr:"scheduled 9:30",hrs:0,bud:7.5,pics:0},
+ {prop:"Eastport Distribution",sub:"Warehouse campus · Ray T.",status:"done",crew:"Crew 2 — Dwayne P.",svc:"Mow, perimeter trim",arr:"6:40–8:55 am",hrs:6.7,bud:6.0,pics:3},
+ {prop:"Willow Bend HOA",sub:"96 units · Karen B.",status:"pending",crew:"Crew 3 — Andre L.",svc:"Mow, edge, blow",arr:"scheduled 2:00",hrs:0,bud:5.5,pics:0},
+ {prop:"Coastal Bank — 4 branches",sub:"Multi-site · Ray T.",status:"done",crew:"Crew 5 — Nate S.",svc:"Detail, chemical app",arr:"7:00–9:40 am",hrs:8.1,bud:8.0,pics:9},
+ {prop:"Ridgeview Apartments",sub:"240 units · Karen B.",status:"skip",crew:"Crew 1 — Hector M.",svc:"Mow, edge",arr:"rained out 1:40 pm",hrs:0,bud:6.0,pics:2}
+];
+
+var LOG=[
+ {t:"Today  1:15 pm",k:"done",txt:"<b>Grand Reserve HOA</b> completed by Crew 1 — 6.4 hrs against a 6.5 budget · 5 photos attached", who:"Hector M."},
+ {t:"Today  1:40 pm",k:"skip",txt:"<b>Ridgeview Apartments</b> could not be serviced — rained out, needs a make-up visit · 2 photos", who:"Hector M."},
+ {t:"Today  11:20 am",k:"done",txt:"<b>St. Andrews Medical Plaza</b> completed by Crew 3 — <b>12.6 hrs against a 9.0 budget</b>, third visit running long · 8 photos", who:"Andre L."},
+ {t:"Today  10:55 am",k:"iss",txt:"<b>Live Oak Village HOA</b> — zone 7 solenoid failed, three heads not firing. Repair quoted at $285 · 2 photos", who:"Nate S."},
+ {t:"Today  10:10 am",k:"done",txt:"<b>Bayfront Corporate Center</b> completed by Crew 4 — 10.2 hrs against a 10.0 budget · 7 photos", who:"Tomas R."},
+ {t:"Today  9:40 am",k:"chem",txt:"<b>Coastal Bank — 4 branches</b> chemical application logged — applicator Nate S., licence FL-11482, product and rate recorded", who:"Nate S."},
+ {t:"Today  8:40 am",k:"iss",txt:"<b>Sandpiper Office Park</b> — two dead shrubs at the monument sign. Replacement plus mulch, roughly $340 · sent to Karen B.", who:"Hector M."},
+ {t:"Today  8:05 am",k:"skip",txt:"<b>Cypress Trace HOA</b> could not be serviced — gate code failed, nobody on site · 1 photo", who:"Andre L."},
+ {t:"Today  6:50 am",k:"done",txt:"<b>Westlake Commons HOA</b> completed by Crew 1 — 5.2 hrs against a 5.0 budget · 6 photos", who:"Hector M."}
+];
+
+var META={
+  done:{label:"Complete",cls:"p-done"}, onsite:{label:"On site",cls:"p-onsite"},
+  behind:{label:"Behind",cls:"p-behind"}, skip:{label:"Skipped",cls:"p-skip"},
+  pending:{label:"Not started",cls:"p-pending"}
+};
+var TILES=[
+  {k:"done",l:"Complete",c:"t-done"},{k:"onsite",l:"On site",c:"t-onsite"},
+  {k:"behind",l:"Behind",c:"t-behind"},{k:"skip",l:"Skipped",c:"t-skip"},
+  {k:"pending",l:"Not started",c:"t-pending"}
+];
+var HEAD={
+  board:["Which crews are where, and what's actually done?","Every property on today's schedule, which crew has it, whether it's finished, and how the hours compare to what the contract allows. When a property manager calls Thursday asking whether anyone showed up Tuesday, the answer is on this screen instead of in a truck somewhere."],
+  desk:["How the work actually gets logged","This is the crew leader's phone. Close out the stop before pulling off the property, and the board, the proof-of-service record, the hours and the extra-work backlog all update from that one entry."],
+  logv:["Who was where, when, and what they did","Arrival and departure times, work completed, photos, and chemical application records — in order, with a name on each one. This is what does not exist when routes run on paper."],
+  owner:["What the operation actually made","Same entries the crews made in the field, added up — by day, week, month and year, with the margin that's leaking called out in dollars instead of adjectives."]
+};
+
+var PER={
+ day:{
+  lab:"Revenue — today", fig:"$14,280", prev:"$13,640", up:true, since:"vs the same day last week —",
+  stops:"11 of 16", stopss:"2 skipped, 3 still to go", hrs:"+4.1", hrss:"hours over budget today",
+  enh:"$625", enhs:"2 items found today", rcd:"$2,856",
+  ctitle:"Revenue by day", csub:"The last 14 days. Hover any column for the exact figure.",
+  bars:[13100,14620,12480,15340,13980,9200,14100,13760,15020,12900,14480,13640,11800,14280],
+  xs:["","Aug 5","","Aug 7","","Aug 9","","Aug 11","","Aug 13","","Aug 15","","Today"],
+  cats:[["Contract maintenance",11400],["Irrigation service",1420],["Extra work / enhancements",980],["Chemical programs",480]],
+  custs:[["Grand Reserve HOA","176 units, weekly",1840],["Bayfront Corporate Center","Class A, twice weekly",1680],["St. Andrews Medical Plaza","Ran 3.6 hrs over budget",1520]]
+ },
+ week:{
+  lab:"Revenue — this week", fig:"$68,400", prev:"$64,150", up:true, since:"vs last week —",
+  stops:"73 of 82", stopss:"6 skipped, 3 remaining", hrs:"+21.5", hrss:"hours over budget this week",
+  enh:"$4,180", enhs:"9 items found, 4 quoted", rcd:"$2,736",
+  ctitle:"Revenue by week", csub:"The last 12 weeks. Hover any column for the exact figure.",
+  bars:[58200,61400,57900,64800,62100,66300,59700,63200,67800,61900,64150,68400],
+  xs:["","","Jun 8","","","Jun 29","","","Jul 20","","","This wk"],
+  cats:[["Contract maintenance",54600],["Irrigation service",6100],["Extra work / enhancements",4180],["Chemical programs",3520]],
+  custs:[["Cypress Trace HOA","210 units, largest account",6240],["Meridian Business Campus","5 buildings",5480],["Grand Reserve HOA","176 units",4960],["Bayfront Corporate Center","Class A tower",4620],["Ridgeview Apartments","240 units",4180]]
+ },
+ month:{
+  lab:"Revenue — August to date", fig:"$247,900", prev:"$268,400", up:false, since:"vs July, which finished at",
+  stops:"312 of 348", stopss:"24 skipped, 12 remaining", hrs:"+86", hrss:"hours over budget this month",
+  enh:"$18,600", enhs:"41 items found, 22 quoted", rcd:"$2,691",
+  ctitle:"Revenue by month", csub:"The last 12 months. Hover any column for the exact figure.",
+  bars:[198000,186400,171200,164800,192600,228400,264100,281700,276300,271500,268400,247900],
+  xs:["Sep","","Nov","","Jan","","Mar","","May","","Jul","Aug"],
+  cats:[["Contract maintenance",196400],["Irrigation service",19800],["Extra work / enhancements",18600],["Chemical programs",13100]],
+  custs:[["Cypress Trace HOA","210 units, largest account",24800],["Meridian Business Campus","5 buildings",21600],["Ridgeview Apartments","240 units",18900],["Grand Reserve HOA","176 units",17400],["Coastal Bank","4 branches, multi-site",14200]]
+ },
+ year:{
+  lab:"Revenue — 2026 to date", fig:"$2,684,000", prev:"$2,411,300", up:true, since:"vs the same point last year —",
+  stops:"2,940", stopss:"completed this year", hrs:"+612", hrss:"hours over budget year to date",
+  enh:"$196,400", enhs:"quoted from field-logged items", rcd:"$2,704",
+  ctitle:"Revenue by year", csub:"The last five years. 2026 is a partial year. Hover any column for the exact figure.",
+  bars:[1642000,1874500,2118900,2398600,2684000],
+  xs:["2022","2023","2024","2025","2026 YTD"],
+  cats:[["Contract maintenance",2118000],["Extra work / enhancements",196400],["Irrigation service",212800],["Chemical programs",156800]],
+  custs:[["Cypress Trace HOA","210 units, 6 years running",214600],["Meridian Business Campus","5 buildings",186200],["Ridgeview Apartments","240 units",164800],["Bayfront Corporate Center","Class A tower",148300],["Coastal Bank","4 branches",121400]]
+ }
+};
+
+var filter=null, sortK=null, sortAsc=true, flashProp=null;
+
+function stamp(){
+  var d=new Date(), h=d.getHours(), m=d.getMinutes();
+  var ap=h>=12?"pm":"am"; h=h%12; if(h===0) h=12;
+  return "Today  "+h+":"+(m<10?"0":"")+m+" "+ap;
+}
+function money(n){ return "$"+n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,","); }
+function shortMoney(n){
+  if(n>=1000000) return "$"+(n/1000000).toFixed(n>=10000000?0:1)+"M";
+  if(n>=1000) return "$"+Math.round(n/1000)+"k";
+  return "$"+n;
+}
+
+function drawTiles(){
+  var html="";
+  for(var i=0;i<TILES.length;i++){
+    var t=TILES[i], n=0;
+    for(var j=0;j<DATA.length;j++){ if(DATA[j].status===t.k) n++; }
+    html+='<button class="tile '+t.c+(filter===t.k?' on':'')+'" data-f="'+t.k+'">'
+        + '<div class="n">'+n+'</div><div class="l">'+t.l+'</div></button>';
+  }
+  document.getElementById("tiles").innerHTML=html;
+  var b=document.querySelectorAll(".tile");
+  for(var z=0;z<b.length;z++){
+    b[z].onclick=function(){ filter=(filter===this.dataset.f)?null:this.dataset.f; drawTiles(); draw(); };
+  }
+}
+
+function draw(){
+  var q=document.getElementById("q").value.trim().toLowerCase();
+  var rows=[],i;
+  for(i=0;i<DATA.length;i++){
+    var d=DATA[i];
+    if(filter && d.status!==filter) continue;
+    if(q && (d.prop+" "+d.sub+" "+d.crew+" "+d.svc).toLowerCase().indexOf(q)===-1) continue;
+    rows.push(d);
+  }
+  if(sortK){
+    rows.sort(function(a,b){
+      var x=a[sortK],y=b[sortK];
+      if(typeof x==="number"&&typeof y==="number") return sortAsc?x-y:y-x;
+      x=String(x).toLowerCase(); y=String(y).toLowerCase();
+      return sortAsc?x.localeCompare(y):y.localeCompare(x);
+    });
+  }
+  var tb=document.getElementById("rows");
+  if(!rows.length){
+    tb.innerHTML='<tr><td colspan="8" class="empty">Nothing matches that. <b>Show all</b> puts the schedule back.</td></tr>';
+  } else {
+    var out="";
+    for(i=0;i<rows.length;i++){
+      var r=rows[i], m=META[r.status];
+      var hrs = r.hrs>0 ? r.hrs.toFixed(1) : "—";
+      var bud = r.bud.toFixed(1);
+      if(r.hrs>0){
+        if(r.hrs>r.bud) hrs='<span class="over">'+r.hrs.toFixed(1)+'</span>';
+        else hrs='<span class="under">'+r.hrs.toFixed(1)+'</span>';
+      }
+      var pics = r.pics>0 ? '<span class="cam">'+r.pics+' photos</span>' : '<span class="cam">—</span>';
+      out+='<tr'+(r.prop===flashProp?' class="flash"':'')+'>'
+        +'<td><span class="prop">'+r.prop+'</span><span class="sub">'+r.sub+'</span></td>'
+        +'<td><span class="pill '+m.cls+'">'+m.label+'</span></td>'
+        +'<td>'+r.crew+'</td><td>'+r.svc+'</td>'
+        +'<td class="num">'+r.arr+'</td>'
+        +'<td class="num">'+hrs+'</td><td class="num">'+bud+'</td>'
+        +'<td>'+pics+'</td></tr>';
+    }
+    tb.innerHTML=out;
+  }
+  document.getElementById("count").textContent =
+    (rows.length===DATA.length)?DATA.length+" stops today":rows.length+" of "+DATA.length+" stops";
+  if(flashProp){ setTimeout(function(){ flashProp=null; draw(); },2600); }
+}
+
+function drawLog(){
+  var h="";
+  for(var i=0;i<LOG.length;i++){
+    var e=LOG[i];
+    var cls = e.k==="done"?"d-done":(e.k==="iss"?"d-iss":(e.k==="chem"?"d-chem":"d-skip"));
+    h+='<div class="logrow"><div class="when">'+e.t+'</div>'
+      +'<div class="what"><span class="dot '+cls+'"></span>'+e.txt+'</div>'
+      +'<div class="who">'+e.who+'</div></div>';
+  }
+  document.getElementById("logbox").innerHTML=h;
+}
+
+function fillSelects(){
+  var a="",b="";
+  for(var i=0;i<DATA.length;i++){
+    var d=DATA[i];
+    if(d.status!=="done") a+='<option value="'+i+'">'+d.prop+' — '+d.crew+'</option>';
+    b+='<option value="'+i+'">'+d.prop+'</option>';
+  }
+  document.getElementById("c-prop").innerHTML = a || '<option value="">Every stop is closed out</option>';
+  document.getElementById("i-prop").innerHTML = b;
+}
+
+function showOk(id,msg){
+  var el=document.getElementById(id);
+  el.innerHTML=msg; el.className="ok show";
+  setTimeout(function(){ el.className="ok"; },6000);
+}
+
+document.getElementById("c-go").onclick=function(){
+  var s=document.getElementById("c-prop");
+  if(s.value==="") return;
+  var i=parseInt(s.value,10), d=DATA[i];
+  var arr=document.getElementById("c-arr").value.trim()||"7:40 am";
+  var dep=document.getElementById("c-dep").value.trim()||"9:15 am";
+  var crew=document.getElementById("c-crew").value;
+  var pics=parseInt(document.getElementById("c-pics").value,10); if(isNaN(pics)) pics=0;
+  var note=document.getElementById("c-note").value.trim();
+  var chem=document.getElementById("s5").checked;
+  var hrs=Math.round((d.bud*(0.85+Math.random()*0.45))*10)/10;
+  d.status="done"; d.crew=crew; d.arr=arr+"–"+dep; d.hrs=hrs; d.pics=pics;
+  var who=crew.split(" — ")[1]||crew;
+  LOG.unshift({t:stamp(),k:"done",
+    txt:"<b>"+d.prop+"</b> completed by "+crew.split(" — ")[0]+" — "+hrs.toFixed(1)
+        +" hrs against a "+d.bud.toFixed(1)+" budget"+(hrs>d.bud?" (over)":"")
+        +" · "+pics+" photos attached", who:who});
+  if(chem){
+    LOG.unshift({t:stamp(),k:"chem",
+      txt:"<b>"+d.prop+"</b> chemical application logged — applicator "+who+", licence and product recorded", who:who});
+  }
+  if(note){
+    LOG.unshift({t:stamp(),k:"iss",txt:"<b>"+d.prop+"</b> — "+note, who:who});
+  }
+  flashProp=d.prop;
+  document.getElementById("c-note").value="";
+  showOk("c-ok","Logged. <b>"+d.prop+"</b> is complete at "+hrs.toFixed(1)+" hrs"
+    +(hrs>d.bud?' — <b>over the '+d.bud.toFixed(1)+' hr budget</b>':" — inside budget")+".");
+  fillSelects(); drawTiles(); draw(); drawLog();
+};
+
+document.getElementById("i-go").onclick=function(){
+  var s=document.getElementById("i-prop");
+  if(s.value==="") return;
+  var d=DATA[parseInt(s.value,10)];
+  var kind=document.getElementById("i-kind").value;
+  var note=document.getElementById("i-note").value.trim()||"No detail entered";
+  var val=document.getElementById("i-val").value.trim();
+  var pics=document.getElementById("i-pics").value.trim();
+  var to=document.getElementById("i-to").value.split(" — ")[0];
+  var by=document.getElementById("i-by").value.split(" — ")[0];
+  var lead = kind==="skip" ? "could not be serviced" : (kind==="enh" ? "extra work found" : "problem found");
+  var k = kind==="skip" ? "skip" : "iss";
+  if(kind==="skip"){ d.status="skip"; d.arr="not serviced"; d.hrs=0; }
+  LOG.unshift({t:stamp(),k:k,
+    txt:"<b>"+d.prop+"</b> — "+lead+": "+note+(val?" · "+val:"")+(pics?" · "+pics+" photos":"")+" · sent to "+to,
+    who:by});
+  flashProp=d.prop;
+  document.getElementById("i-note").value=""; document.getElementById("i-val").value="";
+  showOk("i-ok","Sent to "+to+" and logged against <b>"+d.prop+"</b>"
+    +(kind==="enh"?" — it's now in the extra-work backlog on the owner's board.":"."));
+  fillSelects(); drawTiles(); draw(); drawLog();
+};
+
+function drawOwner(p){
+  var d=PER[p],i;
+  document.getElementById("h-lab").textContent=d.lab;
+  document.getElementById("h-fig").textContent=d.fig;
+  var cur=parseFloat(d.fig.replace(/[$,]/g,"")), pv=parseFloat(d.prev.replace(/[$,]/g,""));
+  var pct=Math.round(Math.abs(cur-pv)/pv*1000)/10;
+  document.getElementById("h-del").innerHTML='<b class="'+(d.up?"":"dn")+'">'+(d.up?"▲":"▼")+" "+pct+'%</b> '+d.since+" "+d.prev;
+  document.getElementById("k-stops").textContent=d.stops;
+  document.getElementById("k-stopss").textContent=d.stopss;
+  document.getElementById("k-hrs").textContent=d.hrs;
+  document.getElementById("k-hrss").textContent=d.hrss;
+  document.getElementById("k-enh").textContent=d.enh;
+  document.getElementById("k-enhs").textContent=d.enhs;
+  document.getElementById("k-rcd").textContent=d.rcd;
+  document.getElementById("c-title").textContent=d.ctitle;
+  document.getElementById("c-sub").textContent=d.csub;
+
+  var max=0;
+  for(i=0;i<d.bars.length;i++){ if(d.bars[i]>max) max=d.bars[i]; }
+  var step = max>1000000?500000:(max>100000?50000:(max>20000?10000:2000));
+  var top=Math.ceil(max/step)*step;
+
+  var gl="";
+  for(i=0;i<=3;i++){
+    gl+='<div class="gl" style="top:'+(i*100/3)+'%"><span>'+shortMoney(Math.round(top*(3-i)/3))+'</span></div>';
+  }
+  var cols='<div class="cols">';
+  for(i=0;i<d.bars.length;i++){
+    cols+='<div class="slot"><div class="tip">'+(d.xs[i]||("#"+(i+1)))+" · "+money(d.bars[i])+'</div>'
+        + '<div class="col" style="height:'+(d.bars[i]/top*100)+'%"></div></div>';
+  }
+  document.getElementById("plot").innerHTML=gl+cols+'</div>';
+
+  var xl="";
+  for(i=0;i<d.xs.length;i++) xl+="<div>"+d.xs[i]+"</div>";
+  document.getElementById("xlab").innerHTML=xl;
+
+  var cmax=0;
+  for(i=0;i<d.cats.length;i++){ if(d.cats[i][1]>cmax) cmax=d.cats[i][1]; }
+  var ch="";
+  for(i=0;i<d.cats.length;i++){
+    ch+='<div class="brow"><div class="bn">'+d.cats[i][0]+'</div>'
+      + '<div class="bt"><div class="bf" style="width:'+(d.cats[i][1]/cmax*100)+'%"></div></div>'
+      + '<div class="bv">'+shortMoney(d.cats[i][1])+'</div></div>';
+  }
+  document.getElementById("cats").innerHTML=ch;
+
+  var th="";
+  for(i=0;i<d.custs.length;i++){
+    th+='<tr><td>'+d.custs[i][0]+'<span class="cs2">'+d.custs[i][1]+'</span></td><td>'+money(d.custs[i][2])+'</td></tr>';
+  }
+  document.getElementById("custs").innerHTML=th;
+}
+
+var ths=document.querySelectorAll("th");
+for(var t2=0;t2<ths.length;t2++){
+  ths[t2].onclick=function(){
+    var k=this.dataset.k;
+    if(sortK===k){sortAsc=!sortAsc;} else {sortK=k;sortAsc=true;}
+    for(var o=0;o<ths.length;o++) ths[o].classList.remove("sorted");
+    this.classList.add("sorted");
+    this.querySelector(".ar").innerHTML=sortAsc?"&#9650;":"&#9660;";
+    draw();
+  };
+}
+document.getElementById("q").addEventListener("input",draw);
+document.getElementById("clear").onclick=function(){
+  filter=null; document.getElementById("q").value=""; drawTiles(); draw();
+};
+
+var tabs=document.querySelectorAll(".tab");
+for(var v=0;v<tabs.length;v++){
+  tabs[v].onclick=function(){
+    for(var a=0;a<tabs.length;a++) tabs[a].classList.remove("on");
+    this.classList.add("on");
+    var views=document.querySelectorAll(".view");
+    for(var b=0;b<views.length;b++) views[b].classList.remove("on");
+    document.getElementById("v-"+this.dataset.v).classList.add("on");
+    document.getElementById("ih").textContent=HEAD[this.dataset.v][0];
+    document.getElementById("ip").textContent=HEAD[this.dataset.v][1];
+    window.scrollTo(0,0);
+  };
+}
+
+var pers=document.querySelectorAll(".per");
+for(var pz=0;pz<pers.length;pz++){
+  pers[pz].onclick=function(){
+    for(var a=0;a<pers.length;a++) pers[a].classList.remove("on");
+    this.classList.add("on");
+    drawOwner(this.dataset.p);
+  };
+}
+
+fillSelects(); drawTiles(); draw(); drawLog(); drawOwner("week");
+</script>
+</body>
+</html>
