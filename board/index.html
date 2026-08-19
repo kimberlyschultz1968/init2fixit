@@ -62,7 +62,7 @@
   .btn-clear:hover{border-color:#AFC3E6}
 
   .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(22,31,49,.06),0 6px 18px rgba(22,31,49,.05)}
-  .scroll{overflow-x:auto;scrollbar-width:thin;scrollbar-color:#AFC3E6 #EDF1F8}
+  .scroll{overflow-x:hidden}
   .scroll::-webkit-scrollbar{height:11px}
   .scroll::-webkit-scrollbar-track{background:#EDF1F8;border-radius:6px}
   .scroll::-webkit-scrollbar-thumb{background:#AFC3E6;border-radius:6px;border:2px solid #EDF1F8}
@@ -70,7 +70,7 @@
   .swipe{display:none;font-size:11.5px;color:var(--muted);padding:5px 2px 0;text-align:right}
   .swipe.on{display:block}
   table{width:100%;border-collapse:collapse}
-  #tbl{table-layout:fixed;width:1300px}
+  #tbl{table-layout:fixed;width:100%}
   th{
     font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;color:#B9CDF4;
     text-align:left;padding:10px 12px;background:linear-gradient(180deg,#2A5BDD,#12309B);
@@ -249,6 +249,15 @@
   .over{color:#C0392B;font-weight:700}
   .under{color:#2F6B38;font-weight:700}
   td.unit,td.prop{font-weight:700;color:var(--ink)}
+
+  /* narrow-screen table fallback */
+  @media (max-width:1200px){
+    .scroll{overflow-x:auto;scrollbar-width:thin;scrollbar-color:#AFC3E6 #EDF1F8}
+    .scroll::-webkit-scrollbar{height:11px}
+    .scroll::-webkit-scrollbar-track{background:#EDF1F8;border-radius:6px}
+    .scroll::-webkit-scrollbar-thumb{background:#AFC3E6;border-radius:6px;border:2px solid #EDF1F8}
+    #tbl{width:1080px}
+  }
 </style>
 </head>
 <body>
@@ -298,7 +307,7 @@
     <div class="panel">
       <div class="scroll">
         <table id="tbl">
-          <colgroup><col style="width:180px"><col style="width:155px"><col style="width:105px"><col style="width:116px"><col style="width:180px"><col style="width:200px"><col style="width:86px"><col style="width:90px"><col style="width:88px"><col style="width:100px"></colgroup>
+          <colgroup><col style="width:13.846%"><col style="width:11.923%"><col style="width:8.077%"><col style="width:10.4%"><col style="width:13.846%"><col style="width:13.9%"><col style="width:6.615%"><col style="width:6.923%"><col style="width:6.769%"><col style="width:7.701%"></colgroup>
           <thead>
             <tr>
               <th data-k="unit">Unit <span class="ar">&#9650;</span></th>
@@ -942,7 +951,8 @@ fillSelects(); drawTiles(); draw(); drawLog(); drawOwner("week");
         tip.textContent="\u2190 scroll sideways for the rest of the columns \u2192";
         sc.parentNode.appendChild(tip);
       }
-      tip.className = (sc.scrollWidth > sc.clientWidth + 4) ? "swipe on" : "swipe";
+      var can = getComputedStyle(sc).overflowX !== "hidden";
+      tip.className = (can && sc.scrollWidth > sc.clientWidth + 4) ? "swipe on" : "swipe";
     });
   }
   window.addEventListener("resize",swipeHint);

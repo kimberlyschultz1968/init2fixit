@@ -55,7 +55,7 @@
   .btn-clear:hover{border-color:#AFC3E6}
 
   .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
-  .scroll{overflow-x:auto;scrollbar-width:thin;scrollbar-color:#AFC3E6 #EDF1F8}
+  .scroll{overflow-x:hidden}
   .scroll::-webkit-scrollbar{height:11px}
   .scroll::-webkit-scrollbar-track{background:#EDF1F8;border-radius:6px}
   .scroll::-webkit-scrollbar-thumb{background:#AFC3E6;border-radius:6px;border:2px solid #EDF1F8}
@@ -63,7 +63,7 @@
   .swipe{display:none;font-size:11.5px;color:var(--muted);padding:5px 2px 0;text-align:right}
   .swipe.on{display:block}
   table{width:100%;border-collapse:collapse}
-  #tbl{table-layout:fixed;width:1674px}
+  #tbl{table-layout:fixed;width:100%}
   th{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);text-align:left;padding:7px 11px;background:linear-gradient(180deg,#FAFCFE,#EDF1F8);border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
   th:hover{color:var(--ink)}
   th .ar{opacity:.35;font-size:9px;margin-left:3px}
@@ -199,6 +199,15 @@
   .over{color:#C0392B;font-weight:700}
   .under{color:#2F6B38;font-weight:700}
   td.unit,td.prop{font-weight:700;color:var(--ink)}
+
+  /* narrow-screen table fallback */
+  @media (max-width:1200px){
+    .scroll{overflow-x:auto;scrollbar-width:thin;scrollbar-color:#AFC3E6 #EDF1F8}
+    .scroll::-webkit-scrollbar{height:11px}
+    .scroll::-webkit-scrollbar-track{background:#EDF1F8;border-radius:6px}
+    .scroll::-webkit-scrollbar-thumb{background:#AFC3E6;border-radius:6px;border:2px solid #EDF1F8}
+    #tbl{width:1180px}
+  }
 </style>
 </head>
 <body>
@@ -246,7 +255,7 @@
     </div>
     <div class="panel"><div class="scroll">
       <table id="tbl">
-        <colgroup><col style="width:118px"><col style="width:210px"><col style="width:108px"><col style="width:132px"><col style="width:112px"><col style="width:84px"><col style="width:62px"><col style="width:62px"><col style="width:88px"><col style="width:128px"><col style="width:66px"><col style="width:230px"><col style="width:92px"><col style="width:92px"><col style="width:90px"></colgroup>
+        <colgroup><col style="width:7.732%"><col style="width:10.4%"><col style="width:6.186%"><col style="width:8.542%"><col style="width:9.2%"><col style="width:5.302%"><col style="width:3.387%"><col style="width:3.387%"><col style="width:5.302%"><col style="width:10.6%"><col style="width:3.976%"><col style="width:9.34%"><col style="width:5.744%"><col style="width:5.891%"><col style="width:5.011%"></colgroup>
           <thead><tr>
           <th data-k="pn">Part number<span class="ar">▲</span></th>
           <th data-k="desc">Description<span class="ar">▲</span></th>
@@ -902,7 +911,8 @@ refresh();
         tip.textContent="\u2190 scroll sideways for the rest of the columns \u2192";
         sc.parentNode.appendChild(tip);
       }
-      tip.className = (sc.scrollWidth > sc.clientWidth + 4) ? "swipe on" : "swipe";
+      var can = getComputedStyle(sc).overflowX !== "hidden";
+      tip.className = (can && sc.scrollWidth > sc.clientWidth + 4) ? "swipe on" : "swipe";
     });
   }
   window.addEventListener("resize",swipeHint);
