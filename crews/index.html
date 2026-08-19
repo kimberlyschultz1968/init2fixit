@@ -64,12 +64,51 @@
   .swipe.on{display:block}
   table{width:100%;border-collapse:collapse}
   #tbl{table-layout:fixed;width:100%}
-  th{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);text-align:left;padding:7px 11px;background:linear-gradient(180deg,#FBFDFB,#EAF1EB);border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
-  th:hover{color:var(--ink)}
-  th .ar{opacity:.35;font-size:9px;margin-left:3px}
-  th.sorted .ar{opacity:1;color:var(--green-mid)}
-  td{padding:0 9px;border-bottom:1px solid var(--faint);border-right:1px solid var(--faint);vertical-align:middle;font-size:13px;height:29px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  tbody tr:nth-child(even) td{background:var(--zebra)}
+  th{font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;color:#BEDBC4;
+     text-align:left;padding:10px 12px;background:linear-gradient(180deg,#3B7C45,#16351B);
+     border-bottom:none;white-space:nowrap;cursor:pointer;user-select:none}
+  th:first-child{padding-left:18px}
+  th:hover{color:#fff}
+  th .ar{opacity:.4;font-size:9px;margin-left:3px}
+  th.sorted .ar{opacity:1;color:#fff}
+  td{padding:0 12px;border-bottom:1px solid var(--faint);vertical-align:middle;font-size:13px;
+     color:var(--body);height:38px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover td:first-child::before{width:6px}
+  tbody tr.prow{cursor:pointer}
+
+  /* status spine */
+  tbody td:first-child{position:relative;padding-left:18px}
+  tbody td:first-child::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--line);transition:width .12s}
+  tbody tr.r-done td:first-child::before{background:#2F6B38}
+  tbody tr.r-onsite td:first-child::before{background:#1E4FD6}
+  tbody tr.r-behind td:first-child::before{background:#B7791F}
+  tbody tr.r-skip td:first-child::before{background:#C0392B}
+  tbody tr.r-pending td:first-child::before{background:#8FA3BF}
+
+  td.prop{font-weight:700;color:var(--ink);font-size:14px;letter-spacing:-.1px}
+  .edot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#B7791F;margin-left:6px;vertical-align:middle}
+
+  /* inline editing */
+  td.ed{padding:0}
+  td.ed select,td.ed input{width:100%;height:36px;border:none;background:transparent;font:inherit;
+    font-size:13px;color:var(--ink);padding:0 10px;cursor:pointer}
+  td.ed input{cursor:text;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  td.ed select:hover,td.ed input:hover{background:rgba(47,107,56,.07)}
+  td.ed select:focus,td.ed input:focus{outline:none;background:#fff;box-shadow:inset 0 0 0 2px var(--green-mid)}
+  td.st-done select{color:#1E4B26;font-weight:700}
+  td.st-onsite select{color:#12309B;font-weight:700}
+  td.st-behind select{color:#8A5B00;font-weight:700}
+  td.st-skip select{color:#96271B;font-weight:700}
+  td.st-pending select{color:var(--muted)}
+
+  /* who is making the change */
+  .signas{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .signas select{padding:5px 9px;border:1px solid var(--line);border-radius:6px;font:inherit;
+    font-size:12.5px;font-weight:700;color:var(--ink);background:var(--paper)}
+  .d-edit{background:#B7791F}
+  .logrow.isedit .what{color:var(--body)}
   tbody tr:hover td{background:#E9F3EB}
   tbody tr.flash td{background:#FFF6D9;transition:background 2.4s}
   .prop{font-weight:700;color:var(--ink)}
@@ -186,6 +225,32 @@
   .close a{display:inline-block;margin-top:18px;background:#fff;color:var(--green);text-decoration:none;font-weight:800;padding:13px 30px;border-radius:7px;font-size:15.5px}
   .close a:hover{background:#E9F3EB}
 
+  .veil{position:fixed;inset:0;background:rgba(15,27,46,.42);opacity:0;pointer-events:none;transition:opacity .18s;z-index:40}
+  .veil.on{opacity:1;pointer-events:auto}
+  .rec{position:fixed;top:0;right:0;bottom:0;width:min(460px,94vw);background:var(--paper);
+       box-shadow:-8px 0 34px rgba(15,27,46,.22);transform:translateX(102%);
+       transition:transform .22s cubic-bezier(.4,0,.2,1);z-index:41;display:flex;flex-direction:column}
+  .rec.on{transform:translateX(0)}
+  .rechead{padding:16px 20px;background:linear-gradient(160deg,#16351B,#2F6B38 60%,#1E4B26);color:#fff;flex:none}
+  .rechead .pn{font-size:19px;font-weight:800;letter-spacing:-.2px}
+  .rechead .ds{font-size:13.5px;color:#CFE8D4;margin-top:1px}
+  .rechead .x{position:absolute;top:13px;right:16px;width:28px;height:28px;border:none;border-radius:6px;
+    background:rgba(255,255,255,.16);color:#fff;font-size:17px;line-height:1;cursor:pointer;font-family:inherit}
+  .rechead .x:hover{background:rgba(255,255,255,.28)}
+  .recbody{padding:16px 20px 26px;overflow-y:auto;flex:1}
+  .sect{font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:800;color:var(--green-mid);
+        margin:16px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--faint)}
+  .sect:first-child{margin-top:0}
+  .kv{display:flex;justify-content:space-between;gap:14px;padding:5px 0;font-size:13.5px}
+  .kv .k{color:var(--muted)}
+  .kv .v{color:var(--ink);font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+  .rnote{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;
+    font-size:13px;min-height:70px;resize:vertical;color:var(--ink)}
+  .rnote:focus{outline:none;border-color:var(--green-mid);box-shadow:0 0 0 3px rgba(47,107,56,.13)}
+  .hist{font-size:12.5px;padding:7px 0;border-bottom:1px solid var(--faint)}
+  .hist:last-child{border-bottom:none}
+  .hist .hw{color:var(--muted);font-size:11.5px}
+  .none{font-size:13px;color:var(--muted);padding:6px 0}
   footer{padding:17px 0 26px;text-align:center;font-size:13px;color:var(--muted)}
   footer a{color:var(--green-mid);text-decoration:none;font-weight:600}
 
@@ -226,6 +291,18 @@
 <header>
   <div class="wrap bar">
     <img class="brandlogo" src="../logo-mini.webp" alt="IN IT 2 FIX IT">
+    <div class="signas">Signed in as
+      <select id="whoami">
+        <option>Hector M. &mdash; Crew 1</option>
+        <option>Dwayne P. &mdash; Crew 2</option>
+        <option>Andre L. &mdash; Crew 3</option>
+        <option>Tomas R. &mdash; Crew 4</option>
+        <option>Nate S. &mdash; irrigation</option>
+        <option>Karen B. &mdash; account manager</option>
+        <option>Ray T. &mdash; branch manager</option>
+        <option>Office</option>
+      </select>
+    </div>
     <span class="co">Crew Board</span>
   </div>
 </header>
@@ -261,23 +338,18 @@
     <div class="panel">
       <div class="scroll">
         <table id="tbl">
-          <colgroup><col style="width:10.78%"><col style="width:9.004%"><col style="width:9.004%"><col style="width:10.4%"><col style="width:5.166%"><col style="width:7.085%"><col style="width:9.446%"><col style="width:5.461%"><col style="width:6.642%"><col style="width:4.28%"><col style="width:4.28%"><col style="width:5.756%"><col style="width:5.314%"><col style="width:7.382%"></colgroup>
+          <colgroup><col style="width:20%"><col style="width:12%"><col style="width:11%"><col style="width:16%"><col style="width:9%"><col style="width:10%"><col style="width:7%"><col style="width:7%"><col style="width:8%"></colgroup>
           <thead>
             <tr>
               <th data-k="prop">Property <span class="ar">&#9650;</span></th>
-              <th data-k="size">Size <span class="ar">&#9650;</span></th>
-              <th data-k="acct">Account manager <span class="ar">&#9650;</span></th>
               <th data-k="status">Status <span class="ar">&#9650;</span></th>
               <th data-k="crew">Crew <span class="ar">&#9650;</span></th>
-              <th data-k="lead">Crew lead <span class="ar">&#9650;</span></th>
               <th data-k="svc">Service <span class="ar">&#9650;</span></th>
               <th data-k="arr">Arrived <span class="ar">&#9650;</span></th>
               <th data-k="dep">Departed <span class="ar">&#9650;</span></th>
               <th data-k="hrs">Hours <span class="ar">&#9650;</span></th>
               <th data-k="bud">Budget <span class="ar">&#9650;</span></th>
               <th data-k="var">Over / under <span class="ar">&#9650;</span></th>
-              <th data-k="pics">Proof <span class="ar">&#9650;</span></th>
-              <th data-k="note">Note <span class="ar">&#9650;</span></th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -494,6 +566,16 @@
   </div>
 </div>
 
+<div class="veil" id="veil"></div>
+<aside class="rec" id="rec" aria-hidden="true">
+  <div class="rechead" style="position:relative">
+    <div class="pn" id="rPn"></div>
+    <div class="ds" id="rDs"></div>
+    <button class="x" id="rX" title="Close">&times;</button>
+  </div>
+  <div class="recbody" id="rBody"></div>
+</aside>
+
 <footer>
   <div class="wrap">
     IN IT 2 FIX IT &nbsp;·&nbsp; New Port Richey, Florida &nbsp;·&nbsp;
@@ -642,7 +724,7 @@ function draw(){
   }
   var tb=document.getElementById("rows");
   if(!rows.length){
-    tb.innerHTML='<tr><td colspan="14" class="empty">Nothing matches that. <b>Show all</b> puts the schedule back.</td></tr>';
+    tb.innerHTML='<tr><td colspan="9" class="empty">Nothing matches that. <b>Show all</b> puts the schedule back.</td></tr>';
   } else {
     var out="";
     for(i=0;i<rows.length;i++){
@@ -672,18 +754,19 @@ function draw(){
         vr = diff>0 ? '<span class="over">+'+diff.toFixed(1)+'</span>'
            : (diff<0 ? '<span class="under">'+diff.toFixed(1)+'</span>' : '0.0');
       }
-      out+='<tr'+(r.prop===flashProp?' class="flash"':'')+'>'
-        +'<td class="prop" title="'+r.prop+'">'+r.prop+'</td>'
-        +'<td title="'+size+'">'+size+'</td>'
-        +'<td title="'+acct+'">'+acct+'</td>'
-        +'<td><span class="pill '+m.cls+'">'+m.label+'</span></td>'
-        +'<td>'+crew+'</td><td>'+lead+'</td>'
+      var stOpts=Object.keys(META).map(function(k){
+        return '<option value="'+k+'"'+(r.status===k?" selected":"")+">"+META[k].label+"</option>"; }).join("");
+      var cwOpts=ROSTER.map(function(c){
+        return '<option value="'+c+'"'+(r.crew===c?" selected":"")+">"+c.split(" \u2014 ")[0]+"</option>"; }).join("");
+      out+='<tr class="prow r-'+r.status+(r.prop===flashProp?' flash':'')+'" data-prop="'+r.prop+'">'
+        +'<td class="prop" title="'+r.prop+'">'+r.prop+(r.edited?'<span class="edot" title="edited"></span>':'')+'</td>'
+        +'<td class="ed st-'+r.status+'"><select data-prop="'+r.prop+'" data-f="status">'+stOpts+'</select></td>'
+        +'<td class="ed"><select data-prop="'+r.prop+'" data-f="crew">'+cwOpts+'</select></td>'
         +'<td title="'+r.svc+'">'+r.svc+'</td>'
         +'<td class="num">'+arrv+'</td><td class="num">'+dep+'</td>'
-        +'<td class="num">'+hrs+'</td><td class="num">'+bud+'</td>'
-        +'<td class="num">'+vr+'</td>'
-        +'<td>'+pics+'</td>'
-        +'<td style="color:var(--muted)" title="'+note+'">'+note+'</td></tr>';
+        +'<td class="ed num"><input type="number" step="0.1" min="0" data-prop="'+r.prop+'" data-f="hrs" value="'+(r.hrs||"")+'"></td>'
+        +'<td class="num">'+bud+'</td>'
+        +'<td class="num">'+vr+'</td></tr>';
     }
     tb.innerHTML=out;
   }
@@ -692,12 +775,116 @@ function draw(){
   if(flashProp){ setTimeout(function(){ flashProp=null; draw(); },2600); }
 }
 
+var ROSTER=["Crew 1 \u2014 Hector M.","Crew 2 \u2014 Dwayne P.","Crew 3 \u2014 Andre L.",
+             "Crew 4 \u2014 Tomas R.","Crew 5 \u2014 Nate S."];
+function who(){ var el=document.getElementById("whoami"); return el?el.value.split(" \u2014 ")[0]:"Office"; }
+function stamp(){
+  var d=new Date();
+  return "Today  "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+}
+function audit(prop, field, from, to){
+  LOG.unshift({t:stamp(), k:"edit", edit:true,
+    txt:"<b>"+prop+"</b> \u2014 "+field+" changed from <b>"+from+"</b> to <b>"+to+"</b>",
+    who:who()});
+  drawLog();
+}
+function histFor(prop){
+  return LOG.filter(function(e){ return e.edit && e.txt.indexOf("<b>"+prop+"</b>")===0; });
+}
+
+function openRec(prop){
+  var r=DATA.filter(function(x){return x.prop===prop;})[0]; if(!r) return;
+  var sp=String(r.sub).split(" \u00b7 ");
+  var cw=String(r.crew).split(" \u2014 ");
+  var m=META[r.status];
+  var over=r.hrs>0?Math.round((r.hrs-r.bud)*10)/10:null;
+  document.getElementById("rPn").textContent=r.prop;
+  document.getElementById("rDs").textContent=(sp[0]||"")+" \u00b7 "+(sp[1]||"");
+  var h="";
+  h+='<div class="sect">Today</div>';
+  h+='<div class="kv"><span class="k">Status</span><span class="v"><span class="pill '+m.cls+'">'+m.label+"</span></span></div>";
+  h+='<div class="kv"><span class="k">Crew</span><span class="v">'+(cw[0]||"")+"</span></div>";
+  h+='<div class="kv"><span class="k">Crew lead</span><span class="v">'+(cw[1]||"\u2014")+"</span></div>";
+  h+='<div class="kv"><span class="k">Service</span><span class="v">'+r.svc+"</span></div>";
+  h+='<div class="kv"><span class="k">On site</span><span class="v">'+r.arr+"</span></div>";
+  h+='<div class="kv"><span class="k">Hours</span><span class="v">'+(r.hrs||"\u2014")+"</span></div>";
+  h+='<div class="kv"><span class="k">Budgeted</span><span class="v">'+r.bud+"</span></div>";
+  if(over!==null){
+    h+='<div class="kv"><span class="k">Over / under</span><span class="v" style="color:'+(over>0?"#C0392B":"#2F6B38")+'">'+
+       (over>0?"+":"")+over.toFixed(1)+"</span></div>";
+  }
+  h+='<div class="kv"><span class="k">Photos attached</span><span class="v">'+(r.pics||0)+"</span></div>";
+
+  h+='<div class="sect">The property</div>';
+  h+='<div class="kv"><span class="k">Size</span><span class="v">'+(sp[0]||"\u2014")+"</span></div>";
+  h+='<div class="kv"><span class="k">Account manager</span><span class="v">'+(sp[1]||"\u2014")+"</span></div>";
+
+  h+='<div class="sect">Note for the office</div>';
+  h+='<textarea class="rnote" id="rNote" placeholder="Anything the office should know about this property\u2026">'+
+     (r.note||"")+"</textarea>";
+
+  h+='<div class="sect">Change history</div>';
+  var hs=histFor(r.prop);
+  h+= hs.length ? hs.map(function(e){
+        return '<div class="hist">'+e.txt.replace("<b>"+r.prop+"</b> \u2014 ","")+
+               '<div class="hw">'+e.who+" \u00b7 "+e.t+"</div></div>"; }).join("")
+      : '<div class="none">Nothing has been changed on this stop yet.</div>';
+
+  document.getElementById("rBody").innerHTML=h;
+  document.getElementById("rBody").scrollTop=0;
+  var ta=document.getElementById("rNote");
+  ta.addEventListener("change",function(){
+    var was=r.note||"(empty)";
+    if(ta.value!==(r.note||"")){
+      r.note=ta.value; r.edited=true;
+      audit(r.prop,"note",was,ta.value||"(empty)");
+      draw();
+    }
+  });
+  document.getElementById("rec").classList.add("on");
+  document.getElementById("veil").classList.add("on");
+}
+function closeRec(){
+  document.getElementById("rec").classList.remove("on");
+  document.getElementById("veil").classList.remove("on");
+}
+
+/* every edit is attributed and logged */
+document.addEventListener("change",function(e){
+  var el=e.target;
+  if(!el.hasAttribute||!el.hasAttribute("data-prop")||!el.hasAttribute("data-f")) return;
+  var r=DATA.filter(function(x){return x.prop===el.getAttribute("data-prop");})[0];
+  if(!r) return;
+  var f=el.getAttribute("data-f");
+  if(f==="status"){
+    var was=META[r.status].label, now=META[el.value].label;
+    if(was===now) return;
+    r.status=el.value; r.edited=true; audit(r.prop,"status",was,now);
+  } else if(f==="crew"){
+    var wasC=r.crew.split(" — ")[0], nowC=el.value.split(" — ")[0];
+    if(wasC===nowC) return;
+    r.crew=el.value; r.edited=true; audit(r.prop,"crew",wasC,nowC);
+  } else if(f==="hrs"){
+    var wasH=r.hrs, nowH=parseFloat(el.value)||0;
+    if(wasH===nowH) return;
+    r.hrs=nowH; r.edited=true; audit(r.prop,"hours",wasH,nowH);
+  }
+  draw(); drawTiles();
+});
+document.addEventListener("click",function(e){
+  if(e.target.closest("td.ed")) return;
+  var tr=e.target.closest("tr.prow");
+  if(tr){ openRec(tr.getAttribute("data-prop")); return; }
+  if(e.target.id==="veil"||e.target.id==="rX") closeRec();
+});
+document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeRec(); });
+
 function drawLog(){
   var h="";
   for(var i=0;i<LOG.length;i++){
     var e=LOG[i];
-    var cls = e.k==="done"?"d-done":(e.k==="iss"?"d-iss":(e.k==="chem"?"d-chem":"d-skip"));
-    h+='<div class="logrow"><div class="when">'+e.t+'</div>'
+    var cls = e.k==="edit"?"d-edit":(e.k==="done"?"d-done":(e.k==="iss"?"d-iss":(e.k==="chem"?"d-chem":"d-skip")));
+    h+='<div class="logrow'+(e.edit?" isedit":"")+'"><div class="when">'+e.t+'</div>'
       +'<div class="what"><span class="dot '+cls+'"></span>'+e.txt+'</div>'
       +'<div class="who">'+e.who+'</div></div>';
   }
