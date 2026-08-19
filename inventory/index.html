@@ -54,7 +54,7 @@
   .btn-clear{padding:9px 15px;border:1px solid var(--line);background:var(--paper);border-radius:7px;font:inherit;font-size:13.5px;color:var(--body);cursor:pointer}
   .btn-clear:hover{border-color:#AFC3E6}
 
-  .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(22,31,49,.06),0 6px 18px rgba(22,31,49,.05)}
   .scroll{overflow-x:hidden}
   .scroll::-webkit-scrollbar{height:11px}
   .scroll::-webkit-scrollbar-track{background:#EDF1F8;border-radius:6px}
@@ -64,13 +64,30 @@
   .swipe.on{display:block}
   table{width:100%;border-collapse:collapse}
   #tbl{table-layout:fixed;width:100%}
-  th{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);text-align:left;padding:7px 11px;background:linear-gradient(180deg,#FAFCFE,#EDF1F8);border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
-  th:hover{color:var(--ink)}
-  th .ar{opacity:.35;font-size:9px;margin-left:3px}
-  th.sorted .ar{opacity:1;color:var(--blue)}
-  td{padding:0 9px;border-bottom:1px solid var(--faint);border-right:1px solid var(--faint);vertical-align:middle;font-size:13px;height:29px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  tbody tr:nth-child(even) td{background:var(--zebra)}
-  tbody tr:hover td{background:#E8F0FE}
+  th{font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;color:#B9CDF4;
+     text-align:left;padding:10px 12px;background:linear-gradient(180deg,#2A5BDD,#12309B);
+     border-bottom:none;white-space:nowrap;cursor:pointer;user-select:none}
+  th:first-child{padding-left:18px}
+  th:hover{color:#fff}
+  th .ar{opacity:.4;font-size:9px;margin-left:3px}
+  th.sorted .ar{opacity:1;color:#fff}
+  td{padding:0 12px;border-bottom:1px solid var(--faint);vertical-align:middle;font-size:13px;
+     color:var(--body);height:38px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:#F3F8FF}
+  tbody tr:hover td:first-child::before{width:6px}
+
+  /* status spine down the left edge */
+  tbody td:first-child{position:relative;padding-left:18px}
+  tbody td:first-child::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--line);transition:width .12s}
+  tbody tr.r-ok  td:first-child::before{background:#2F6B38}
+  tbody tr.r-low td:first-child::before{background:#B7791F}
+  tbody tr.r-out td:first-child::before{background:#C0392B}
+
+  /* hierarchy - the part number leads, the rest supports */
+  td.unit{font-weight:700;color:var(--ink);font-size:14px;letter-spacing:-.1px}
+  td.soft{color:var(--muted);font-size:12.5px}
   tbody tr.flash td{background:#FFF6D9;transition:background 2.4s}
   .unit{font-weight:700;color:var(--ink)}
   .sub{display:block;font-size:12px;color:var(--muted);font-weight:400}
@@ -84,7 +101,6 @@
   .bad{color:var(--outq);font-weight:700}
   .empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:15px}
   tbody tr.prow{cursor:pointer}
-  td .cat{display:block;font-size:11px;color:var(--muted);margin-top:-3px}
 
   /* ---- part record slide-over ---- */
   .veil{position:fixed;inset:0;background:rgba(15,27,46,.42);opacity:0;pointer-events:none;
@@ -294,10 +310,11 @@
     </div>
     <div class="panel"><div class="scroll">
       <table id="tbl">
-        <colgroup><col style="width:12%"><col style="width:26%"><col style="width:11%"><col style="width:11%"><col style="width:9%"><col style="width:13%"><col style="width:7%"><col style="width:11%"></colgroup>
+        <colgroup><col style="width:11%"><col style="width:22%"><col style="width:10%"><col style="width:10%"><col style="width:11%"><col style="width:8%"><col style="width:12%"><col style="width:6%"><col style="width:10%"></colgroup>
           <thead><tr>
           <th data-k="pn">Part number<span class="ar">▲</span></th>
           <th data-k="desc">Description<span class="ar">▲</span></th>
+          <th data-k="cat">Category<span class="ar">▲</span></th>
           <th data-k="kind">Type<span class="ar">▲</span></th>
           <th data-k="oh" class="num">On hand<span class="ar">▲</span></th>
           <th data-k="onord" class="num">On order<span class="ar">▲</span></th>
@@ -651,14 +668,15 @@ function rows(){
     return sortAsc ? x-y : y-x;
   });
   $("hint").textContent = list.length===P.length ? "" : list.length+" of "+P.length+" parts";
-  if(!list.length){ $("tb").innerHTML='<tr><td colspan="8" class="empty">Nothing matches that.</td></tr>'; return; }
+  if(!list.length){ $("tb").innerHTML='<tr><td colspan="9" class="empty">Nothing matches that.</td></tr>'; return; }
   $("tb").innerHTML = list.map(function(p){
     var s=status(p);
     var pct = Math.min(100, Math.round(p.oh/p.max*100));
     var col = s.k==="out" ? "#C0392B" : (s.k==="low" ? "#B7791F" : "#2F6B38");
-    return '<tr class="prow" data-pn="'+esc(p.pn)+'">'+
+    return '<tr class="prow r-'+s.k+'" data-pn="'+esc(p.pn)+'">'+
       '<td class="unit" title="'+esc(p.pn)+'">'+esc(p.pn)+"</td>"+
-      '<td title="'+esc(p.desc)+'">'+esc(p.desc)+'<span class="cat">'+esc(p.cat)+"</span></td>"+
+      '<td title="'+esc(p.desc)+'">'+esc(p.desc)+"</td>"+
+      '<td class="soft">'+esc(p.cat)+"</td>"+
       "<td>"+(p.ser?'<span class="pill p-ser">Serialized</span>':'<span style="font-size:13px;color:var(--muted)">Quantity</span>')+"</td>"+
       '<td class="num"><b style="color:var(--ink)">'+p.oh+"</b>"+
         '<span class="bararea"><span class="barfill" style="width:'+pct+'%;background:'+col+'"></span></span></td>'+
