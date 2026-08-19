@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parts &amp; Inventory — IN IT 2 FIX IT</title>
+<meta name="description" content="A live demo: track serialized and non-serialized stock, raise a purchase order, receive against it with the bill of lading attached. Built by IN IT 2 FIX IT.">
+<style>
+  :root{
+    --paper:#FFFFFF; --soft:#F5F8FC; --ink:#161F31; --body:#3C4658; --muted:#6B7688;
+    --blue:#1E4FD6; --deep:#12309B; --green:#245229; --green-mid:#2F6B38;
+    --line:#D9E0EC; --faint:#EBEFF6; --zebra:#F7FAFE;
+    --ok:#2F6B38; --low:#B7791F; --outq:#C0392B; --onord:#6B4FA8; --ser:#1E4FD6;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--soft);color:var(--body);font-family:"Segoe UI",Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding-left:20px;padding-right:20px}
+
+  .ribbon{background:linear-gradient(160deg,#0E2878,#1E4FD6 55%,#12309B);color:#fff;padding:6px 0;font-size:12.5px}
+  .ribbon .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .ribbon b{font-weight:700}
+  .ribbon a{color:#fff;text-decoration:underline}
+
+  header{background:var(--paper);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:9px 0}
+  .brandlogo{display:block;width:98px;height:auto}
+  .bar .co{font-size:12.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+
+  .tabs{background:var(--paper);border-bottom:1px solid var(--line)}
+  .tabs .wrap{display:flex;gap:4px;flex-wrap:wrap}
+  .tab{padding:9px 15px;font:inherit;font-size:13.5px;font-weight:700;color:var(--muted);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer}
+  .tab:hover{color:var(--ink)}
+  .tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+  .intro{background:var(--paper);border-bottom:1px solid var(--line);padding:14px 0 16px}
+  .intro h1{color:var(--ink);font-size:clamp(17px,2.2vw,22px);font-weight:800;line-height:1.2}
+  .intro p{margin-top:4px;max-width:84ch;font-size:13.5px}
+
+  .view{display:none}
+  .view.on{display:block}
+
+  .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin:13px 0 0}
+  .tile{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;transition:border-color .12s,box-shadow .12s;text-align:left;font-family:inherit}
+  .tile:hover{border-color:#AFC3E6;box-shadow:0 2px 8px rgba(22,31,49,.08)}
+  .tile.on{border-color:var(--blue);box-shadow:0 0 0 2px rgba(30,79,214,.16)}
+  .tile .n{font-size:24px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums}
+  .tile .l{font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-top:4px}
+  .t-all .n{color:var(--ink)} .t-low .n{color:var(--low)} .t-out .n{color:var(--outq)}
+  .t-ord .n{color:var(--onord)} .t-ser .n{color:var(--ser)}
+
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:15px 0 9px}
+  .toolbar input[type=search]{flex:1;min-width:210px;padding:7px 11px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:14px;background:var(--paper);color:var(--ink)}
+  .toolbar .hint{font-size:12.5px;color:var(--muted)}
+  .btn-clear{padding:9px 15px;border:1px solid var(--line);background:var(--paper);border-radius:7px;font:inherit;font-size:13.5px;color:var(--body);cursor:pointer}
+  .btn-clear:hover{border-color:#AFC3E6}
+
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:1000px}
+  th{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);text-align:left;padding:7px 11px;background:linear-gradient(180deg,#FAFCFE,#EDF1F8);border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+  th:hover{color:var(--ink)}
+  th .ar{opacity:.35;font-size:9px;margin-left:3px}
+  th.sorted .ar{opacity:1;color:var(--blue)}
+  td{padding:7px 11px;border-bottom:1px solid var(--faint);vertical-align:middle;font-size:13.5px}
+  tbody tr:nth-child(even) td{background:var(--zebra)}
+  tbody tr:hover td{background:#E8F0FE}
+  tbody tr.flash td{background:#FFF6D9;transition:background 2.4s}
+  .unit{font-weight:700;color:var(--ink)}
+  .sub{display:block;font-size:12px;color:var(--muted);font-weight:400}
+  .num{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+  .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .p-ok{color:#1E4B26;background:#E3F2E6;border:1px solid #C2E0C8}
+  .p-low{color:#8A5B00;background:#FFF3D6;border:1px solid #F2DCA6}
+  .p-out{color:#96271B;background:#FDE4E1;border:1px solid #F5C2BB}
+  .p-ord{color:#4A3480;background:#EEE8FA;border:1px solid #D8CCF1}
+  .p-ser{color:#12309B;background:#E4ECFD;border:1px solid #C3D5F8}
+  .bad{color:var(--outq);font-weight:700}
+  .empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:15px}
+  .bararea{display:block;height:5px;background:var(--faint);border-radius:3px;overflow:hidden;margin-top:5px;min-width:70px}
+  .barfill{display:block;height:100%;border-radius:3px}
+
+  .formwrap{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:15px}
+  .fcard{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .fhead{padding:11px 15px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#FAFCFE,#EDF1F8)}
+  .fhead h2{font-size:16px;font-weight:800;color:var(--ink)}
+  .fhead p{font-size:13px;color:var(--muted);margin-top:2px}
+  .fbody{padding:15px}
+  .fld{margin-bottom:10px}
+  .fld label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:5px}
+  .fld input,.fld select,.fld textarea{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:13.5px;background:var(--paper);color:var(--ink)}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,79,214,.12)}
+  .fld textarea{resize:vertical;min-height:58px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .chk{display:flex;align-items:center;gap:9px;margin-bottom:10px;font-size:13.5px}
+  .chk input{width:17px;height:17px;accent-color:var(--blue);flex:none}
+  .go{width:100%;padding:10px 17px;border-radius:6px;border:1px solid #0F2B8C;cursor:pointer;font:inherit;font-size:15px;font-weight:800;color:#fff;letter-spacing:.02em;background:linear-gradient(180deg,#6FA5F7 0%,#2F6FE8 45%,#1E4FD6 52%,#12309B 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2px 8px rgba(18,48,155,.24);text-shadow:0 1px 2px rgba(6,16,60,.45)}
+  .go:hover{background:linear-gradient(180deg,#83B3F9,#4A85F5 45%,#2F6FE8 52%,#1E4FD6)}
+  .go.g{border-color:#122A16;background:linear-gradient(180deg,#57A264,#2F6B38 48%,#1E4B26 55%,#16351B);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 8px rgba(22,53,27,.24)}
+  .go.g:hover{background:linear-gradient(180deg,#68B275,#3B7C45 48%,#245229 55%,#1E4B26)}
+  .note{margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .ok{margin-top:12px;padding:11px 14px;border-radius:7px;background:#E3F2E6;border:1px solid #C2E0C8;color:#1E4B26;font-size:14px;font-weight:600;display:none}
+  .ok.show{display:block}
+
+  .drop{border:2px dashed #AFC3E6;border-radius:9px;padding:22px 18px;text-align:center;background:#FAFCFE;cursor:pointer;transition:border-color .12s,background .12s}
+  .drop:hover{border-color:var(--blue);background:#F1F5FA}
+  .drop .di{font-size:26px;line-height:1}
+  .drop .dt{font-size:14px;font-weight:700;color:var(--ink);margin-top:6px}
+  .drop .ds{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .drop.has{border-style:solid;border-color:var(--ok);background:#E3F2E6}
+  .drop.has .dt{color:#1E4B26}
+  .serbox{display:none;background:#F1F5FA;border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+  .serbox.show{display:block}
+  .serbox .sh{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:8px}
+  .serbox input{margin-bottom:8px}
+
+  .log{margin-top:24px;background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .logrow{display:flex;gap:13px;padding:9px 15px;border-bottom:1px solid var(--faint);align-items:flex-start}
+  .logrow:last-child{border-bottom:none}
+  .logrow:nth-child(even){background:var(--zebra)}
+  .logrow .when{flex:none;width:150px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:2px}
+  .logrow .what{flex:1;font-size:14.5px}
+  .logrow .what b{color:var(--ink)}
+  .logrow .who{flex:none;font-size:12.5px;color:var(--muted);text-align:right;padding-top:2px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
+  .d-po{background:var(--onord)} .d-rc{background:var(--ok)} .d-is{background:var(--low)}
+
+  .periods{display:flex;gap:0;margin:15px 0 0;border:1px solid var(--line);border-radius:8px;overflow:hidden;width:fit-content;background:var(--paper)}
+  .per{padding:8px 17px;font:inherit;font-size:13.5px;font-weight:700;color:var(--muted);background:var(--paper);border:none;border-right:1px solid var(--line);cursor:pointer}
+  .per:last-child{border-right:none}
+  .per:hover{color:var(--ink);background:#F1F5FA}
+  .per.on{color:#fff;background:linear-gradient(180deg,#2F6FE8,#1E4FD6 52%,#12309B)}
+
+  .hero{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 21px;margin-top:11px;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .hero .lab{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .hero .fig{font-size:clamp(29px,4.4vw,42px);font-weight:800;color:var(--ink);line-height:1.05;font-variant-numeric:tabular-nums;margin-top:4px}
+  .hero .delta{font-size:14.5px;margin-top:6px;color:var(--muted)}
+  .hero .delta b{color:var(--ok);font-weight:700}
+  .hero .delta b.dn{color:var(--outq)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:10px}
+  .kpi{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:11px 14px}
+  .kpi .l{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .kpi .v{font-size:21px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:3px;line-height:1.1}
+  .kpi .s{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .kpi .v.warn{color:var(--outq)}
+
+  .chartcard{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px 13px;margin-top:10px;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .chartcard h3{font-size:15.5px;font-weight:800;color:var(--ink)}
+  .chartcard .cs{font-size:13px;color:var(--muted);margin-top:2px;margin-bottom:16px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:10px}
+  .brow{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .brow .bn{flex:none;width:150px;font-size:13.5px;color:var(--body)}
+  .brow .bt{flex:1;height:22px;background:var(--faint);border-radius:4px;overflow:hidden}
+  .brow .bf{height:100%;background:#1E4FD6;border-radius:0 4px 4px 0}
+  .brow .bv{flex:none;width:80px;text-align:right;font-size:13.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ctable{width:100%;border-collapse:collapse;min-width:0}
+  .ctable td{padding:6px 0;border-bottom:1px solid var(--faint);font-size:14px}
+  .ctable tr:last-child td{border-bottom:none}
+  .ctable td:last-child{text-align:right;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ctable td .cs2{display:block;font-size:12px;color:var(--muted)}
+
+  .leak{background:linear-gradient(180deg,#FFF9EC,#FFF4DC);border:1px solid #F2DCA6;border-radius:10px;padding:15px 19px;margin-top:10px}
+  .leak h3{font-size:15.5px;font-weight:800;color:#8A5B00;margin-bottom:12px}
+  .leak .lg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .leak .li .v{font-size:20px;font-weight:800;color:#96271B;font-variant-numeric:tabular-nums;line-height:1.1}
+  .leak .li .l{font-size:13px;color:#8A5B00;margin-top:3px}
+
+  .why{margin:19px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:15px;position:relative;overflow:hidden}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#0F2B8C,#5B93F2,#0F2B8C)}
+  .card h3{font-size:15.5px;color:var(--ink);font-weight:800;margin-bottom:6px}
+  .card p{font-size:14px}
+
+  .close{margin:21px 0 0;background:linear-gradient(160deg,#0E2878,#1E4FD6 50%,#12309B);color:#fff;border-radius:11px;padding:25px 24px;text-align:center}
+  .close h2{font-size:clamp(17px,2.2vw,21px);font-weight:800;margin-bottom:10px}
+  .close p{color:#DCE6FB;max-width:62ch;margin:0 auto;font-size:15.5px}
+  .close a{display:inline-block;margin-top:18px;background:#fff;color:var(--deep);text-decoration:none;font-weight:800;padding:13px 30px;border-radius:7px;font-size:15.5px}
+  .close a:hover{background:#E8F0FE}
+
+  footer{padding:17px 0 26px;text-align:center;font-size:13px;color:var(--muted)}
+  footer a{color:var(--blue);text-decoration:none;font-weight:600}
+
+  @media (max-width:900px){
+    .tiles{grid-template-columns:repeat(3,1fr)} .why{grid-template-columns:1fr} .formwrap{grid-template-columns:1fr}
+    .kpis{grid-template-columns:repeat(2,1fr)} .split{grid-template-columns:1fr} .leak .lg{grid-template-columns:1fr;gap:14px}
+    .logrow{flex-wrap:wrap;gap:6px} .logrow .when{width:auto} .logrow .who{text-align:left}
+    .three{grid-template-columns:1fr}
+  }
+  @media (max-width:560px){ .tiles{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+
+<div class="ribbon">
+  <div class="wrap">
+    <span><b>Demo</b> — sample data. Raise a purchase order, receive it with the bill of lading attached, and watch the stock, the log and the numbers update.</span>
+    <span>Built by <a href="https://init2fixit.com">IN IT 2 FIX IT</a></span>
+  </div>
+</div>
+
+<header>
+  <div class="wrap bar">
+    <img class="brandlogo" src="../logo-mini.webp" alt="IN IT 2 FIX IT">
+    <span class="co">Parts &amp; Inventory</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="wrap">
+    <button class="tab on" data-v="inv">Inventory</button>
+    <button class="tab" data-v="po">Purchase orders</button>
+    <button class="tab" data-v="rec">Receiving</button>
+    <button class="tab" data-v="logv">Activity log</button>
+    <button class="tab" data-v="owner">Owner's board</button>
+  </div>
+</div>
+
+<div class="intro">
+  <div class="wrap">
+    <h1 id="ih">What's on the shelf, and what's about to run out?</h1>
+    <p id="ip">Every part you stock — serialized and not — with the on-hand count, the minimum you're supposed to keep, and the maximum you're willing to carry. The parts sitting below their minimum are the ones that put a machine on the down list next week.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ INVENTORY ============ -->
+  <div class="view on" id="v-inv">
+    <div class="tiles" id="tiles"></div>
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Search part number, description, UPC, vendor or bin…" autocomplete="off">
+      <button class="btn-clear" id="clear">Show all</button>
+      <span class="hint" id="hint"></span>
+    </div>
+    <div class="panel"><div class="scroll">
+      <table id="tbl">
+        <thead><tr>
+          <th data-k="pn">Part number<span class="ar">▲</span></th>
+          <th data-k="desc">Description<span class="ar">▲</span></th>
+          <th data-k="upc">UPC<span class="ar">▲</span></th>
+          <th data-k="kind">Type<span class="ar">▲</span></th>
+          <th data-k="oh" class="num">On hand<span class="ar">▲</span></th>
+          <th data-k="min" class="num">Min<span class="ar">▲</span></th>
+          <th data-k="max" class="num">Max<span class="ar">▲</span></th>
+          <th data-k="onord" class="num">On order<span class="ar">▲</span></th>
+          <th data-k="st">Status<span class="ar">▲</span></th>
+          <th data-k="bin">Bin<span class="ar">▲</span></th>
+          <th data-k="val" class="num">Value<span class="ar">▲</span></th>
+        </tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div></div>
+
+    <div class="why">
+      <div class="card"><h3>Min and max are the whole point</h3><p>A part below its minimum is a machine waiting to break. The list of what to order this week should build itself out of that, not out of somebody walking the shelves with a clipboard.</p></div>
+      <div class="card"><h3>Serialized and not, in one place</h3><p>An engine has a serial number and a history. A box of filters has a count. Most systems make you choose. Both belong on the same screen because the person looking for them doesn't care which is which.</p></div>
+      <div class="card"><h3>UPC means the shelf can be scanned</h3><p>Every part carries its barcode, so a count can be done with a phone instead of a pen. That's the difference between counting stock twice a year and knowing what you have.</p></div>
+    </div>
+  </div>
+
+  <!-- ============ PURCHASE ORDERS ============ -->
+  <div class="view" id="v-po">
+    <div class="formwrap">
+      <div class="fcard">
+        <div class="fhead"><h2>Raise a purchase order</h2><p>What the parts manager fills in when stock needs replacing.</p></div>
+        <div class="fbody">
+          <div class="fld"><label>Vendor</label>
+            <select id="poVendor">
+              <option>Coastal Parts Supply</option>
+              <option>Hydraulic &amp; Hose Co.</option>
+              <option>Midwest Engine Parts</option>
+              <option>Filter Direct</option>
+              <option>National Equipment Wholesale</option>
+            </select>
+          </div>
+          <div class="fld"><label>Part</label>
+            <select id="poPart"></select>
+          </div>
+          <div class="two">
+            <div class="fld"><label>Quantity</label><input id="poQty" type="number" min="1" value="10"></div>
+            <div class="fld"><label>Unit cost</label><input id="poCost" type="text" value="0.00"></div>
+          </div>
+          <div class="two">
+            <div class="fld"><label>Expected date</label><input id="poEta" type="text" value="in 6 days"></div>
+            <div class="fld"><label>Ordered by</label>
+              <select id="poBy"><option>Dana R. — parts</option><option>Mike C. — counter</option><option>Luis O. — shop</option><option>Sam P. — manager</option></select>
+            </div>
+          </div>
+          <div class="fld"><label>Notes</label><textarea id="poNote" placeholder="Anything the receiving desk should know"></textarea></div>
+          <button class="go" id="poGo">Raise the order</button>
+          <div class="ok" id="poOk"></div>
+          <p class="note">The part shows <b>On order</b> on the inventory screen straight away, so nobody orders it twice and the counter stops promising it to a customer.</p>
+        </div>
+      </div>
+
+      <div class="fcard">
+        <div class="fhead"><h2>Suggested order</h2><p>Built from what's below minimum. Nobody walks the shelves for this.</p></div>
+        <div class="fbody" id="sugg"></div>
+      </div>
+    </div>
+
+    <h2 style="margin:30px 0 0;font-size:17px;font-weight:800;color:var(--ink)">Open purchase orders</h2>
+    <div class="panel" style="margin-top:12px"><div class="scroll">
+      <table style="min-width:820px">
+        <thead><tr><th>PO</th><th>Vendor</th><th>Part</th><th class="num">Ordered</th><th class="num">Received</th><th>Expected</th><th>Status</th><th>Raised by</th></tr></thead>
+        <tbody id="potb"></tbody>
+      </table>
+    </div></div>
+
+    <div class="why">
+      <div class="card"><h3>The order list builds itself</h3><p>Anything under its minimum appears here with the quantity that brings it back to maximum. You approve it, you don't assemble it.</p></div>
+      <div class="card"><h3>On order is a real status</h3><p>Stock that's been ordered but hasn't landed is neither on the shelf nor missing. If the system can't show that, somebody orders it twice — or promises it to a customer.</p></div>
+      <div class="card"><h3>Every PO has a name on it</h3><p>Who raised it, when, and what they expected to pay. Not to police anybody — so that when the invoice doesn't match, there's an answer.</p></div>
+    </div>
+  </div>
+
+  <!-- ============ RECEIVING ============ -->
+  <div class="view" id="v-rec">
+    <div class="formwrap">
+      <div class="fcard">
+        <div class="fhead"><h2>Receive against a purchase order</h2><p>What the receiving desk does when the truck backs in.</p></div>
+        <div class="fbody">
+          <div class="fld"><label>Purchase order</label><select id="rcPo"></select></div>
+          <div class="two">
+            <div class="fld"><label>Quantity received</label><input id="rcQty" type="number" min="0" value="0"></div>
+            <div class="fld"><label>Received by</label>
+              <select id="rcBy"><option>Luis O. — yard</option><option>Dana R. — parts</option><option>Mike C. — counter</option></select>
+            </div>
+          </div>
+
+          <div class="serbox" id="serbox">
+            <div class="sh">Serial numbers — one per unit received</div>
+            <div id="serfields"></div>
+            <p class="note" style="margin-top:0">Serialized parts get their number captured at the dock, not reconstructed later from a pile of paperwork.</p>
+          </div>
+
+          <div class="fld"><label>Bill of lading</label>
+            <div class="drop" id="drop">
+              <div class="di">📄</div>
+              <div class="dt" id="dropt">Attach the bill of lading</div>
+              <div class="ds" id="drops">Click to choose a file — PDF or a photo of the paperwork</div>
+            </div>
+            <input type="file" id="bol" accept=".pdf,.jpg,.jpeg,.png,.heic" style="display:none">
+          </div>
+
+          <div class="fld"><label>Discrepancy or damage</label><textarea id="rcNote" placeholder="Short shipment, damaged carton, wrong part — anything that doesn't match the paperwork"></textarea></div>
+          <button class="go g" id="rcGo">Receive it in</button>
+          <div class="ok" id="rcOk"></div>
+          <p class="note">On-hand goes up, the PO closes or stays part-received, and the bill of lading stays attached to it. When the invoice arrives three weeks later, the proof of what actually turned up is already there.</p>
+        </div>
+      </div>
+
+      <div class="fcard">
+        <div class="fhead"><h2>Why the bill of lading matters</h2><p>The part everyone skips, and then regrets.</p></div>
+        <div class="fbody">
+          <p style="font-size:14.5px;margin-bottom:14px"><b style="color:var(--ink)">Short shipments are invisible without it.</b> The packing slip says twelve, the box holds ten, and by the time the invoice lands nobody can prove which. Attached at the dock, it's settled.</p>
+          <p style="font-size:14.5px;margin-bottom:14px"><b style="color:var(--ink)">Damage claims have a clock on them.</b> Most carriers give you days, not weeks. A photo of the paperwork and the pallet, taken at the dock and attached to the receipt, is the whole claim.</p>
+          <p style="font-size:14.5px;margin-bottom:14px"><b style="color:var(--ink)">It's the one document that ties three parties together.</b> What the vendor says they sent, what the carrier says they carried, and what you say you got. When those three disagree, you need the paper.</p>
+          <p style="font-size:14.5px"><b style="color:var(--ink)">It stops living in a drawer.</b> Attached to the receipt, it's findable in one search by anyone. In a filing cabinet, it's findable by one person, if they're in that day.</p>
+        </div>
+      </div>
+    </div>
+
+    <h2 style="margin:30px 0 0;font-size:17px;font-weight:800;color:var(--ink)">Recent receipts</h2>
+    <div class="panel" style="margin-top:12px"><div class="scroll">
+      <table style="min-width:820px">
+        <thead><tr><th>Received</th><th>PO</th><th>Part</th><th class="num">Qty</th><th>Bill of lading</th><th>Serials</th><th>By</th></tr></thead>
+        <tbody id="rctb"></tbody>
+      </table>
+    </div></div>
+  </div>
+
+  <!-- ============ ACTIVITY LOG ============ -->
+  <div class="view" id="v-logv">
+    <div class="log" id="log"></div>
+    <div class="why">
+      <div class="card"><h3>Nothing gets written twice</h3><p>Logged once when the order is raised and once when it lands. It feeds the shelf count, the on-order list, the vendor history and the owner's numbers.</p></div>
+      <div class="card"><h3>Every move has a name on it</h3><p>Who ordered it, who received it, what the paperwork said. When a vendor argues about a short shipment, there's an answer instead of a memory.</p></div>
+      <div class="card"><h3>The history is the leverage</h3><p>Six months of this tells you which vendor is always late, which part always runs short, and which one you've been overstocking for years.</p></div>
+    </div>
+  </div>
+
+  <!-- ============ OWNER'S BOARD ============ -->
+  <div class="view" id="v-owner">
+    <div class="periods">
+      <button class="per on" data-p="w">This week</button>
+      <button class="per" data-p="m">This month</button>
+      <button class="per" data-p="q">This quarter</button>
+      <button class="per" data-p="y">This year</button>
+    </div>
+
+    <div class="hero">
+      <div class="lab" id="ohLab">Inventory value on hand — this week</div>
+      <div class="fig" id="ohFig">$0</div>
+      <div class="delta" id="ohDelta"></div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="l">Parts stocked</div><div class="v" id="k1">0</div><div class="s">distinct part numbers</div></div>
+      <div class="kpi"><div class="l">Below minimum</div><div class="v warn" id="k2">0</div><div class="s">need ordering now</div></div>
+      <div class="kpi"><div class="l">On order</div><div class="v" id="k3">$0</div><div class="s" id="k3s">across open POs</div></div>
+      <div class="kpi"><div class="l">Stock turns</div><div class="v" id="k4">0</div><div class="s">annualised</div></div>
+    </div>
+
+    <div class="chartcard">
+      <h3>Where the money is sitting</h3>
+      <div class="cs">Inventory value by category. The biggest bar is not always the one earning.</div>
+      <div id="catbars"></div>
+    </div>
+
+    <div class="split">
+      <div class="chartcard" style="margin-top:0">
+        <h3>Biggest vendors</h3>
+        <div class="cs">By spend for the period shown.</div>
+        <table class="ctable" id="vtbl"></table>
+      </div>
+      <div class="chartcard" style="margin-top:0">
+        <h3>Slowest movers</h3>
+        <div class="cs">Money on a shelf that hasn't moved.</div>
+        <table class="ctable" id="dtbl"></table>
+      </div>
+    </div>
+
+    <div class="leak">
+      <h3>What's leaking right now</h3>
+      <div class="lg">
+        <div class="li"><div class="v" id="lk1">$0</div><div class="l" id="lk1l"></div></div>
+        <div class="li"><div class="v" id="lk2">$0</div><div class="l" id="lk2l"></div></div>
+        <div class="li"><div class="v" id="lk3">$0</div><div class="l" id="lk3l"></div></div>
+      </div>
+    </div>
+
+    <div class="why">
+      <div class="card"><h3>A missing $40 part stops a $40,000 machine</h3><p>The cost of a stockout is never the part. It's the unit sitting in the shop not earning, and the customer who was promised it Thursday.</p></div>
+      <div class="card"><h3>Dead stock is cash you already spent</h3><p>Every shelf has parts nobody has touched in a year. Until somebody adds it up, it's invisible — and it gets reordered anyway.</p></div>
+      <div class="card"><h3>Built from what the desk already typed</h3><p>Nobody assembles this report. It's the same entries the parts room made raising orders and receiving them, added up.</p></div>
+    </div>
+
+    <div class="close">
+      <h2>Is this close to how your parts room actually runs?</h2>
+      <p>This is a demo built to start a conversation. If it's close, the real version gets shaped around your part numbers, your vendors, your bins and your paperwork. If it's nowhere near, tell me that too. That's just as useful.</p>
+      <a href="mailto:kimberly@init2fixit.com?subject=The%20inventory%20board">Tell me what's wrong with it</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  IN IT 2 FIX IT &nbsp;·&nbsp; New Port Richey, Florida &nbsp;·&nbsp;
+  <a href="https://init2fixit.com">init2fixit.com</a> &nbsp;·&nbsp;
+  <a href="mailto:kimberly@init2fixit.com">kimberly@init2fixit.com</a>
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- data ---------- */
+var P = [
+ {pn:"FLT-8842",  desc:"Hydraulic return filter",      upc:"0 41234 88421 7", ser:0, oh:14, min:8,  max:30, bin:"A-12", cost:38.50,  vend:"Filter Direct",                cat:"Filters",    days:3},
+ {pn:"FLT-2210",  desc:"Engine oil filter, 4-cyl",     upc:"0 41234 22103 2", ser:0, oh:41, min:20, max:60, bin:"A-14", cost:12.75,  vend:"Filter Direct",                cat:"Filters",    days:1},
+ {pn:"FLT-6603",  desc:"Air filter element, large",    upc:"0 41234 66031 9", ser:0, oh:3,  min:10, max:24, bin:"A-16", cost:44.20,  vend:"Filter Direct",                cat:"Filters",    days:2},
+ {pn:"HYD-1200",  desc:"Hydraulic hose 1/2in x 60in",  upc:"7 65432 12004 1", ser:0, oh:6,  min:12, max:36, bin:"B-03", cost:62.00,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:4},
+ {pn:"HYD-1201",  desc:"Hydraulic hose 3/8in x 48in",  upc:"7 65432 12011 9", ser:0, oh:19, min:10, max:30, bin:"B-04", cost:48.90,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:6},
+ {pn:"HYD-4455",  desc:"Quick coupler, 1/2in flat",    upc:"7 65432 44553 4", ser:0, oh:0,  min:6,  max:20, bin:"B-09", cost:31.40,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:9},
+ {pn:"HYD-9001",  desc:"Hydraulic pump, gear type",    upc:"7 65432 90013 8", ser:1, oh:2,  min:2,  max:5,  bin:"C-01", cost:840.00, vend:"National Equipment Wholesale", cat:"Hydraulics", days:38},
+ {pn:"ENG-3300",  desc:"Engine, 14hp horizontal",      upc:"3 98765 33001 5", ser:1, oh:1,  min:1,  max:3,  bin:"C-04", cost:1290.00,vend:"Midwest Engine Parts",         cat:"Engines",    days:52},
+ {pn:"ENG-3312",  desc:"Carburettor assembly",         upc:"3 98765 33124 6", ser:0, oh:7,  min:4,  max:12, bin:"C-06", cost:96.30,  vend:"Midwest Engine Parts",         cat:"Engines",    days:11},
+ {pn:"ENG-7710",  desc:"Starter motor",                upc:"3 98765 77103 3", ser:1, oh:4,  min:2,  max:6,  bin:"C-08", cost:214.00, vend:"Midwest Engine Parts",         cat:"Engines",    days:16},
+ {pn:"BLT-5502",  desc:"V-belt, 52in",                 upc:"1 22334 55028 0", ser:0, oh:22, min:10, max:40, bin:"D-02", cost:18.60,  vend:"Coastal Parts Supply",         cat:"Drive",      days:5},
+ {pn:"BLT-5510",  desc:"V-belt, 68in",                 upc:"1 22334 55105 7", ser:0, oh:4,  min:8,  max:24, bin:"D-03", cost:21.10,  vend:"Coastal Parts Supply",         cat:"Drive",      days:7},
+ {pn:"BRG-2040",  desc:"Sealed bearing, 40mm",         upc:"1 22334 20408 3", ser:0, oh:31, min:12, max:40, bin:"D-07", cost:26.75,  vend:"Coastal Parts Supply",         cat:"Drive",      days:8},
+ {pn:"TIR-1600",  desc:"Pneumatic tyre 16in, turf",    upc:"5 55112 16003 2", ser:0, oh:9,  min:6,  max:20, bin:"E-01", cost:74.00,  vend:"National Equipment Wholesale", cat:"Wheels",     days:14},
+ {pn:"TIR-1601",  desc:"Solid tyre 16in",              upc:"5 55112 16010 0", ser:0, oh:2,  min:4,  max:12, bin:"E-02", cost:118.50, vend:"National Equipment Wholesale", cat:"Wheels",     days:63},
+ {pn:"CTL-8800",  desc:"Control module, digital",      upc:"9 11223 88005 4", ser:1, oh:3,  min:1,  max:4,  bin:"F-01", cost:1150.00,vend:"National Equipment Wholesale", cat:"Electrical", days:47},
+ {pn:"ELE-1120",  desc:"Battery, group 24",            upc:"9 11223 11207 1", ser:0, oh:11, min:6,  max:18, bin:"F-04", cost:142.00, vend:"Coastal Parts Supply",         cat:"Electrical", days:6},
+ {pn:"ELE-4402",  desc:"Wiring harness, main",         upc:"9 11223 44026 8", ser:0, oh:1,  min:3,  max:8,  bin:"F-06", cost:187.40, vend:"Coastal Parts Supply",         cat:"Electrical", days:29},
+ {pn:"CON-0101",  desc:"Hydraulic oil, 5 gal pail",    upc:"0 41234 01015 6", ser:0, oh:16, min:8,  max:24, bin:"G-01", cost:89.00,  vend:"Coastal Parts Supply",         cat:"Consumables",days:2},
+ {pn:"CON-0210",  desc:"Grease cartridge, case of 10", upc:"0 41234 02106 1", ser:0, oh:5,  min:6,  max:20, bin:"G-03", cost:52.25,  vend:"Coastal Parts Supply",         cat:"Consumables",days:4},
+ {pn:"CON-0330",  desc:"Shop rags, bale",              upc:"0 41234 03302 7", ser:0, oh:28, min:10, max:30, bin:"G-05", cost:34.00,  vend:"Coastal Parts Supply",         cat:"Consumables",days:9},
+ {pn:"SEA-7701",  desc:"Cylinder seal kit, 2in bore",  upc:"7 65432 77015 2", ser:0, oh:2,  min:5,  max:15, bin:"B-11", cost:67.80,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:21}
+];
+P.forEach(function(p){ p.onord = 0; p.serials = []; });
+// pre-seed a couple of serials so serialized parts read as real
+P.find(function(p){return p.pn==="HYD-9001";}).serials = ["HP-44112","HP-44118"];
+P.find(function(p){return p.pn==="ENG-3300";}).serials = ["EN-90233"];
+P.find(function(p){return p.pn==="ENG-7710";}).serials = ["SM-1204","SM-1209","SM-1233","SM-1240"];
+P.find(function(p){return p.pn==="CTL-8800";}).serials = ["CM-7781","CM-7788","CM-7790"];
+
+var POS = [
+ {id:"PO-2411", vend:"Filter Direct",        pn:"FLT-6603", qty:20, recd:0,  cost:44.20, eta:"in 3 days", by:"Dana R. — parts", st:"Open"},
+ {id:"PO-2412", vend:"Hydraulic & Hose Co.", pn:"HYD-1200", qty:24, recd:12, cost:62.00, eta:"in 5 days", by:"Dana R. — parts", st:"Part received"},
+ {id:"PO-2413", vend:"Coastal Parts Supply", pn:"BLT-5510", qty:20, recd:0,  cost:21.10, eta:"in 8 days", by:"Sam P. — manager",st:"Open"}
+];
+POS.forEach(function(o){ var p=byPn(o.pn); if(p) p.onord += (o.qty-o.recd); });
+
+var RECS = [
+ {when:"Yesterday 2:14pm", po:"PO-2412", pn:"HYD-1200", qty:12, bol:"BOL-88231.pdf", ser:"—", by:"Luis O. — yard"},
+ {when:"Mon 10:02am",      po:"PO-2409", pn:"ELE-1120", qty:8,  bol:"BOL-88104.pdf", ser:"—", by:"Luis O. — yard"}
+];
+
+var LOG = [
+ {when:"Yesterday 2:14pm", cls:"d-rc", html:"Received <b>12</b> of <b>HYD-1200</b> against <b>PO-2412</b> — bill of lading <b>BOL-88231.pdf</b> attached. PO stays part received, 12 still outstanding.", who:"Luis O. — yard"},
+ {when:"Yesterday 8:40am", cls:"d-po", html:"<b>PO-2413</b> raised with <b>Coastal Parts Supply</b> — 20 × <b>BLT-5510</b> at $21.10. Below minimum since Friday.", who:"Sam P. — manager"},
+ {when:"Tue 4:31pm",       cls:"d-is", html:"<b>HYD-4455</b> hit zero. Two work orders waiting on it.", who:"system"},
+ {when:"Mon 10:02am",      cls:"d-rc", html:"Received <b>8</b> of <b>ELE-1120</b> against <b>PO-2409</b> — bill of lading <b>BOL-88104.pdf</b> attached. PO closed.", who:"Luis O. — yard"},
+ {when:"Mon 7:55am",       cls:"d-po", html:"<b>PO-2411</b> raised with <b>Filter Direct</b> — 20 × <b>FLT-6603</b> at $44.20.", who:"Dana R. — parts"}
+];
+
+/* ---------- helpers ---------- */
+function byPn(pn){ for(var i=0;i<P.length;i++){ if(P[i].pn===pn) return P[i]; } return null; }
+function $(id){ return document.getElementById(id); }
+function money(n){ return "$" + n.toLocaleString("en-US",{maximumFractionDigits:0}); }
+function money2(n){ return "$" + n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function status(p){
+  if(p.oh===0) return {k:"out", t:"Out of stock", c:"p-out"};
+  if(p.oh < p.min) return {k:"low", t:"Below min", c:"p-low"};
+  return {k:"ok", t:"OK", c:"p-ok"};
+}
+
+/* ---------- tabs ---------- */
+var INTRO = {
+ inv:["What's on the shelf, and what's about to run out?","Every part you stock — serialized and not — with the on-hand count, the minimum you're supposed to keep, and the maximum you're willing to carry. The parts sitting below their minimum are the ones that put a machine on the down list next week."],
+ po:["Ordering, without walking the shelves","The suggested order builds itself from anything below minimum, with the quantity that brings it back up to maximum. Raise it, and the part shows as on order everywhere — so nobody buys it twice and the counter stops promising it."],
+ rec:["The truck backed in. Now what?","Receive against the purchase order, enter what actually turned up rather than what was ordered, capture serial numbers at the dock, and attach the bill of lading. Three weeks later when the invoice doesn't match, the proof is already on the record."],
+ logv:["Every order and every receipt, with a name on it","Who ordered what, who received it, how much actually arrived, and which paperwork backs it up. This is the history that tells you which vendor is always late."],
+ owner:["What is the shelf actually costing you?","Money sitting in stock, money stuck in parts nobody has touched in a year, and the machines that are down right now waiting on a part that should have been reordered. Every figure built from what the parts desk already typed."]
+};
+Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(b){
+  b.addEventListener("click",function(){
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(x){x.classList.remove("on");});
+    Array.prototype.forEach.call(document.querySelectorAll(".view"),function(x){x.classList.remove("on");});
+    b.classList.add("on");
+    var v = b.getAttribute("data-v");
+    $("v-"+v).classList.add("on");
+    $("ih").textContent = INTRO[v][0];
+    $("ip").textContent = INTRO[v][1];
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+});
+
+/* ---------- inventory ---------- */
+var filter="all", sortK="pn", sortAsc=true;
+
+function tiles(){
+  var low=0,out=0,ord=0,ser=0;
+  P.forEach(function(p){
+    if(p.oh===0) out++; else if(p.oh<p.min) low++;
+    if(p.onord>0) ord++;
+    if(p.ser) ser++;
+  });
+  var t=[["all","Parts stocked",P.length,"t-all"],["low","Below min",low,"t-low"],["out","Out of stock",out,"t-out"],["ord","On order",ord,"t-ord"],["ser","Serialized",ser,"t-ser"]];
+  $("tiles").innerHTML = t.map(function(x){
+    return '<button class="tile '+x[3]+(filter===x[0]?" on":"")+'" data-f="'+x[0]+'"><div class="n">'+x[2]+'</div><div class="l">'+x[1]+'</div></button>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll(".tile"),function(b){
+    b.addEventListener("click",function(){ filter=b.getAttribute("data-f"); tiles(); rows(); });
+  });
+}
+
+function rows(){
+  var q = $("q").value.trim().toLowerCase();
+  var list = P.filter(function(p){
+    if(filter==="low" && !(p.oh<p.min && p.oh>0)) return false;
+    if(filter==="out" && p.oh!==0) return false;
+    if(filter==="ord" && p.onord<=0) return false;
+    if(filter==="ser" && !p.ser) return false;
+    if(q){
+      var hay=(p.pn+" "+p.desc+" "+p.upc+" "+p.vend+" "+p.bin+" "+p.cat).toLowerCase();
+      if(hay.indexOf(q)===-1) return false;
+    }
+    return true;
+  });
+  list.sort(function(a,b){
+    var x,y;
+    if(sortK==="val"){ x=a.oh*a.cost; y=b.oh*b.cost; }
+    else if(sortK==="kind"){ x=a.ser; y=b.ser; }
+    else if(sortK==="st"){ x=status(a).k; y=status(b).k; }
+    else { x=a[sortK]; y=b[sortK]; }
+    if(typeof x==="string"){ return sortAsc ? x.localeCompare(y) : y.localeCompare(x); }
+    return sortAsc ? x-y : y-x;
+  });
+  $("hint").textContent = list.length===P.length ? "" : list.length+" of "+P.length+" parts";
+  if(!list.length){ $("tb").innerHTML='<tr><td colspan="11" class="empty">Nothing matches that.</td></tr>'; return; }
+  $("tb").innerHTML = list.map(function(p){
+    var s=status(p);
+    var pct = Math.min(100, Math.round(p.oh/p.max*100));
+    var col = s.k==="out" ? "#C0392B" : (s.k==="low" ? "#B7791F" : "#2F6B38");
+    return "<tr>"+
+      '<td><span class="unit">'+esc(p.pn)+'</span><span class="sub">'+esc(p.vend)+'</span></td>'+
+      "<td>"+esc(p.desc)+'<span class="sub">'+esc(p.cat)+"</span></td>"+
+      '<td class="num" style="text-align:left;font-size:13px;color:var(--muted)">'+esc(p.upc)+"</td>"+
+      "<td>"+(p.ser?'<span class="pill p-ser">Serialized</span>':'<span style="font-size:13px;color:var(--muted)">Quantity</span>')+"</td>"+
+      '<td class="num"><b style="color:var(--ink)">'+p.oh+"</b>"+
+        '<span class="bararea"><span class="barfill" style="width:'+pct+'%;background:'+col+'"></span></span></td>'+
+      '<td class="num">'+p.min+"</td>"+
+      '<td class="num">'+p.max+"</td>"+
+      '<td class="num">'+(p.onord>0?'<span class="pill p-ord">'+p.onord+"</span>":'<span style="color:var(--muted)">—</span>')+"</td>"+
+      '<td><span class="pill '+s.c+'">'+s.t+"</span></td>"+
+      "<td>"+esc(p.bin)+"</td>"+
+      '<td class="num">'+money(p.oh*p.cost)+"</td>"+
+    "</tr>";
+  }).join("");
+}
+
+Array.prototype.forEach.call(document.querySelectorAll("#tbl th"),function(th){
+  th.addEventListener("click",function(){
+    var k=th.getAttribute("data-k");
+    if(sortK===k) sortAsc=!sortAsc; else { sortK=k; sortAsc=true; }
+    Array.prototype.forEach.call(document.querySelectorAll("#tbl th"),function(x){x.classList.remove("sorted");});
+    th.classList.add("sorted");
+    th.querySelector(".ar").textContent = sortAsc?"▲":"▼";
+    rows();
+  });
+});
+$("q").addEventListener("input",rows);
+$("clear").addEventListener("click",function(){ $("q").value=""; filter="all"; tiles(); rows(); });
+
+/* ---------- purchase orders ---------- */
+function fillPartSelect(){
+  $("poPart").innerHTML = P.slice().sort(function(a,b){return a.pn.localeCompare(b.pn);}).map(function(p){
+    return '<option value="'+p.pn+'">'+p.pn+" — "+esc(p.desc)+"</option>";
+  }).join("");
+  syncCost();
+}
+function syncCost(){
+  var p=byPn($("poPart").value);
+  if(p){ $("poCost").value = p.cost.toFixed(2); var need=Math.max(1,p.max-p.oh-p.onord); $("poQty").value=need; }
+}
+$("poPart").addEventListener("change",syncCost);
+
+function suggested(){
+  var need = P.filter(function(p){ return (p.oh+p.onord) < p.min; })
+              .sort(function(a,b){ return (a.oh/a.min)-(b.oh/b.min); });
+  if(!need.length){ $("sugg").innerHTML='<p class="empty" style="padding:20px 0">Nothing is below minimum right now.</p>'; return; }
+  $("sugg").innerHTML = need.map(function(p){
+    var order = p.max - p.oh - p.onord;
+    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--faint)">'+
+      '<div style="flex:1"><b style="color:var(--ink)">'+esc(p.pn)+"</b>"+
+      '<span class="sub">'+esc(p.desc)+" · "+esc(p.vend)+"</span></div>"+
+      '<div style="flex:none;text-align:right;font-size:13px;color:var(--muted)">on hand <b style="color:'+(p.oh===0?"#C0392B":"#B7791F")+'">'+p.oh+"</b> / min "+p.min+"</div>"+
+      '<button class="btn-clear" data-sug="'+p.pn+'" style="flex:none">Order '+order+"</button></div>";
+  }).join("") + '<p class="note">Quantity shown brings each part back up to its maximum, less anything already on order.</p>';
+  Array.prototype.forEach.call($("sugg").querySelectorAll("[data-sug]"),function(b){
+    b.addEventListener("click",function(){
+      $("poPart").value=b.getAttribute("data-sug"); syncCost();
+      $("poPart").scrollIntoView({behavior:"smooth",block:"center"});
+    });
+  });
+}
+
+function poTable(){
+  if(!POS.length){ $("potb").innerHTML='<tr><td colspan="8" class="empty">No open purchase orders.</td></tr>'; return; }
+  $("potb").innerHTML = POS.map(function(o){
+    var p=byPn(o.pn);
+    var cls = o.st==="Open" ? "p-ord" : (o.st==="Received" ? "p-ok" : "p-low");
+    return "<tr>"+
+      '<td><span class="unit">'+o.id+"</span></td>"+
+      "<td>"+esc(o.vend)+"</td>"+
+      "<td>"+o.pn+'<span class="sub">'+esc(p?p.desc:"")+"</span></td>"+
+      '<td class="num">'+o.qty+"</td>"+
+      '<td class="num">'+o.recd+"</td>"+
+      "<td>"+esc(o.eta)+"</td>"+
+      '<td><span class="pill '+cls+'">'+o.st+"</span></td>"+
+      '<td style="font-size:13px;color:var(--muted)">'+esc(o.by)+"</td>"+
+    "</tr>";
+  }).join("");
+}
+
+var poSeq = 2414;
+$("poGo").addEventListener("click",function(){
+  var p=byPn($("poPart").value);
+  var qty=parseInt($("poQty").value,10);
+  if(!p || !qty || qty<1){ return; }
+  var cost=parseFloat($("poCost").value)||p.cost;
+  var id="PO-"+(poSeq++);
+  POS.unshift({id:id,vend:$("poVendor").value,pn:p.pn,qty:qty,recd:0,cost:cost,eta:$("poEta").value||"TBC",by:$("poBy").value,st:"Open"});
+  p.onord += qty;
+  LOG.unshift({when:"Just now",cls:"d-po",html:"<b>"+id+"</b> raised with <b>"+esc($("poVendor").value)+"</b> — "+qty+" × <b>"+p.pn+"</b> at "+money2(cost)+"."+($("poNote").value?" Note: "+esc($("poNote").value):""),who:$("poBy").value});
+  $("poOk").textContent = id+" raised. "+p.pn+" now shows "+p.onord+" on order.";
+  $("poOk").classList.add("show");
+  $("poNote").value="";
+  refresh();
+  setTimeout(function(){ $("poOk").classList.remove("show"); },5200);
+});
+
+/* ---------- receiving ---------- */
+function fillPoSelect(){
+  var open = POS.filter(function(o){ return o.recd < o.qty; });
+  if(!open.length){ $("rcPo").innerHTML='<option value="">No open orders</option>'; $("rcQty").value=0; serFields(); return; }
+  $("rcPo").innerHTML = open.map(function(o){
+    var out=o.qty-o.recd;
+    return '<option value="'+o.id+'">'+o.id+" — "+o.pn+" — "+out+" outstanding ("+esc(o.vend)+")</option>";
+  }).join("");
+  syncRc();
+}
+function syncRc(){
+  var o = POS.filter(function(x){return x.id===$("rcPo").value;})[0];
+  if(!o) return;
+  $("rcQty").value = o.qty - o.recd;
+  serFields();
+}
+$("rcPo").addEventListener("change",syncRc);
+$("rcQty").addEventListener("input",serFields);
+
+function serFields(){
+  var o = POS.filter(function(x){return x.id===$("rcPo").value;})[0];
+  if(!o){ $("serbox").classList.remove("show"); return; }
+  var p=byPn(o.pn);
+  var n=parseInt($("rcQty").value,10)||0;
+  if(!p || !p.ser || n<1){ $("serbox").classList.remove("show"); $("serfields").innerHTML=""; return; }
+  var cap=Math.min(n,8);
+  var h="";
+  for(var i=0;i<cap;i++){ h+='<input type="text" class="serin" placeholder="Serial number '+(i+1)+'">'; }
+  if(n>cap){ h+='<p class="note" style="margin-top:0">'+(n-cap)+" more would be captured the same way."; }
+  $("serfields").innerHTML=h;
+  $("serbox").classList.add("show");
+}
+
+var bolName="";
+$("drop").addEventListener("click",function(){ $("bol").click(); });
+$("bol").addEventListener("change",function(){
+  if($("bol").files && $("bol").files[0]){
+    bolName=$("bol").files[0].name;
+    var kb=Math.max(1,Math.round($("bol").files[0].size/1024));
+    $("drop").classList.add("has");
+    $("dropt").textContent=bolName;
+    $("drops").textContent=kb+" KB — attached to this receipt";
+  }
+});
+
+$("rcGo").addEventListener("click",function(){
+  var o = POS.filter(function(x){return x.id===$("rcPo").value;})[0];
+  if(!o){ return; }
+  var p=byPn(o.pn);
+  var n=parseInt($("rcQty").value,10)||0;
+  if(n<1){ return; }
+  var out=o.qty-o.recd;
+  if(n>out) n=out;
+
+  var serials=[];
+  Array.prototype.forEach.call(document.querySelectorAll(".serin"),function(inp){
+    if(inp.value.trim()) serials.push(inp.value.trim());
+  });
+
+  o.recd += n;
+  p.oh += n;
+  p.onord = Math.max(0, p.onord - n);
+  p.days = 0;
+  if(p.ser && serials.length){ p.serials = p.serials.concat(serials); }
+  o.st = o.recd >= o.qty ? "Received" : "Part received";
+
+  var shownBol = bolName || "none attached";
+  RECS.unshift({when:"Just now",po:o.id,pn:o.pn,qty:n,bol:shownBol,ser:serials.length?serials.join(", "):"—",by:$("rcBy").value});
+
+  var msg = "Received <b>"+n+"</b> of <b>"+p.pn+"</b> against <b>"+o.id+"</b> — bill of lading <b>"+esc(shownBol)+"</b>"+(bolName?" attached":"")+".";
+  if(serials.length) msg += " Serials captured: <b>"+esc(serials.join(", "))+"</b>.";
+  msg += o.st==="Received" ? " PO closed." : " PO stays part received, "+(o.qty-o.recd)+" still outstanding.";
+  if($("rcNote").value) msg += " Discrepancy noted: "+esc($("rcNote").value);
+  LOG.unshift({when:"Just now",cls:"d-rc",html:msg,who:$("rcBy").value});
+
+  if(o.recd>=o.qty){ POS = POS.filter(function(x){ return x.id!==o.id || true; }); }
+
+  $("rcOk").textContent = n+" × "+p.pn+" received. On hand is now "+p.oh+"."+(bolName?" "+bolName+" attached.":" No bill of lading was attached — that is the gap this screen is about.");
+  $("rcOk").classList.add("show");
+  $("rcNote").value="";
+  bolName="";
+  $("bol").value="";
+  $("drop").classList.remove("has");
+  $("dropt").textContent="Attach the bill of lading";
+  $("drops").textContent="Click to choose a file — PDF or a photo of the paperwork";
+  refresh();
+  setTimeout(function(){ $("rcOk").classList.remove("show"); },6000);
+});
+
+function recTable(){
+  if(!RECS.length){ $("rctb").innerHTML='<tr><td colspan="7" class="empty">Nothing received yet.</td></tr>'; return; }
+  $("rctb").innerHTML = RECS.map(function(r){
+    var p=byPn(r.pn);
+    var bol = r.bol==="none attached"
+      ? '<span class="pill p-out">None attached</span>'
+      : '<span style="color:var(--blue);font-weight:600">📄 '+esc(r.bol)+"</span>";
+    return "<tr>"+
+      '<td style="font-size:13px;color:var(--muted)">'+esc(r.when)+"</td>"+
+      '<td><span class="unit">'+r.po+"</span></td>"+
+      "<td>"+r.pn+'<span class="sub">'+esc(p?p.desc:"")+"</span></td>"+
+      '<td class="num"><b style="color:var(--ink)">'+r.qty+"</b></td>"+
+      "<td>"+bol+"</td>"+
+      '<td style="font-size:13px">'+esc(r.ser)+"</td>"+
+      '<td style="font-size:13px;color:var(--muted)">'+esc(r.by)+"</td>"+
+    "</tr>";
+  }).join("");
+}
+
+/* ---------- log ---------- */
+function logView(){
+  $("log").innerHTML = LOG.map(function(l){
+    return '<div class="logrow"><div class="when">'+esc(l.when)+'</div>'+
+           '<div class="what"><span class="dot '+l.cls+'"></span>'+l.html+"</div>"+
+           '<div class="who">'+esc(l.who)+"</div></div>";
+  }).join("");
+}
+
+/* ---------- owner's board ---------- */
+var PER={w:{lab:"this week",mult:1,spend:8420},m:{lab:"this month",mult:1,spend:31160},q:{lab:"this quarter",mult:1,spend:88940},y:{lab:"this year",mult:1,spend:341200}};
+var curPer="w";
+Array.prototype.forEach.call(document.querySelectorAll(".per"),function(b){
+  b.addEventListener("click",function(){
+    Array.prototype.forEach.call(document.querySelectorAll(".per"),function(x){x.classList.remove("on");});
+    b.classList.add("on"); curPer=b.getAttribute("data-p"); owner();
+  });
+});
+
+function owner(){
+  var val=0, low=0, out=0, ordVal=0, dead=0, deadN=0;
+  P.forEach(function(p){
+    val += p.oh*p.cost;
+    if(p.oh===0) out++; else if(p.oh<p.min) low++;
+    if(p.days>30){ dead += p.oh*p.cost; deadN++; }
+  });
+  POS.forEach(function(o){ ordVal += (o.qty-o.recd)*o.cost; });
+
+  var per=PER[curPer];
+  $("ohLab").textContent="Inventory value on hand — "+per.lab;
+  $("ohFig").textContent=money(val);
+  $("ohDelta").innerHTML='Spend '+per.lab+' <b>'+money(per.spend)+'</b> · <b class="dn">'+(low+out)+'</b> parts at or below minimum right now';
+
+  $("k1").textContent=P.length;
+  $("k2").textContent=low+out;
+  $("k3").textContent=money(ordVal);
+  $("k3s").textContent=POS.filter(function(o){return o.recd<o.qty;}).length+" open purchase orders";
+  $("k4").textContent=(per.spend*(curPer==="y"?1:(curPer==="q"?4:(curPer==="m"?12:52)))/Math.max(val,1)).toFixed(1)+"×";
+
+  var cats={};
+  P.forEach(function(p){ cats[p.cat]=(cats[p.cat]||0)+p.oh*p.cost; });
+  var arr=Object.keys(cats).map(function(k){return [k,cats[k]];}).sort(function(a,b){return b[1]-a[1];});
+  var mx=arr.length?arr[0][1]:1;
+  $("catbars").innerHTML=arr.map(function(x){
+    return '<div class="brow"><div class="bn">'+esc(x[0])+'</div><div class="bt"><div class="bf" style="width:'+Math.round(x[1]/mx*100)+'%"></div></div><div class="bv">'+money(x[1])+"</div></div>";
+  }).join("");
+
+  var vends={};
+  P.forEach(function(p){ vends[p.vend]=(vends[p.vend]||0)+p.oh*p.cost; });
+  var varr=Object.keys(vends).map(function(k){return [k,vends[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+  $("vtbl").innerHTML=varr.map(function(x){
+    return "<tr><td>"+esc(x[0])+"</td><td>"+money(x[1])+"</td></tr>";
+  }).join("");
+
+  var slow=P.filter(function(p){return p.days>20 && p.oh>0;}).sort(function(a,b){return b.days*b.cost*b.oh - a.days*a.cost*a.oh;}).slice(0,5);
+  $("dtbl").innerHTML = slow.length ? slow.map(function(p){
+    return "<tr><td>"+esc(p.pn)+'<span class="cs2">'+esc(p.desc)+" · "+p.days+" days since it moved</span></td><td>"+money(p.oh*p.cost)+"</td></tr>";
+  }).join("") : '<tr><td class="empty">Everything has moved recently.</td></tr>';
+
+  var downCost = out*1240 + low*310;
+  $("lk1").textContent=money(downCost);
+  $("lk1l").textContent="Machines down waiting on parts — "+out+" parts at zero, "+low+" below minimum";
+  $("lk2").textContent=money(dead);
+  $("lk2l").textContent="Dead stock — "+deadN+" parts nobody has touched in over a month";
+  $("lk3").textContent=money(ordVal);
+  $("lk3l").textContent="Committed on open orders not yet delivered";
+}
+
+/* ---------- boot ---------- */
+function refresh(){ tiles(); rows(); suggested(); poTable(); fillPoSelect(); recTable(); logView(); owner(); }
+fillPartSelect();
+refresh();
+
+})();
+</script>
+</body>
+</html>
