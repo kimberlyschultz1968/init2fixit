@@ -88,6 +88,20 @@
   /* hierarchy - the part number leads, the rest supports */
   td.unit{font-weight:700;color:var(--ink);font-size:14px;letter-spacing:-.1px}
   td.soft{color:var(--muted);font-size:12.5px}
+  .edot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#B7791F;margin-left:6px;vertical-align:middle}
+  td.ed{padding:0}
+  td.ed input{width:100%;height:36px;border:none;background:transparent;font:inherit;font-size:13px;
+    color:var(--ink);padding:0 10px;cursor:text}
+  td.ed.num input{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  td.ed input:hover{background:rgba(30,79,214,.07)}
+  td.ed input:focus{outline:none;background:#fff;box-shadow:inset 0 0 0 2px var(--blue)}
+  td.countcell{position:relative}
+  td.countcell input{padding-bottom:9px}
+  td.countcell .bararea{position:absolute;left:10px;right:10px;bottom:7px;margin:0}
+  .signas{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .signas select{padding:5px 9px;border:1px solid var(--line);border-radius:6px;font:inherit;
+    font-size:12.5px;font-weight:700;color:var(--ink);background:var(--paper)}
+  .d-edit{background:#B7791F}
   tbody tr.flash td{background:#FFF6D9;transition:background 2.4s}
   .unit{font-weight:700;color:var(--ink)}
   .sub{display:block;font-size:12px;color:var(--muted);font-weight:400}
@@ -277,6 +291,14 @@
 <header>
   <div class="wrap bar">
     <img class="brandlogo" src="../logo-mini.webp" alt="IN IT 2 FIX IT">
+    <div class="signas">Signed in as
+      <select id="whoami">
+        <option>Dana R. &mdash; parts</option>
+        <option>Mike C. &mdash; counter</option>
+        <option>Luis O. &mdash; yard</option>
+        <option>Sam P. &mdash; manager</option>
+      </select>
+    </div>
     <span class="co">Parts &amp; Inventory</span>
   </div>
 </header>
@@ -675,16 +697,16 @@ function rows(){
     var pct = Math.min(100, Math.round(p.oh/p.max*100));
     var col = s.k==="out" ? "#C0392B" : (s.k==="low" ? "#B7791F" : "#2F6B38");
     return '<tr class="prow r-'+s.k+'" data-pn="'+esc(p.pn)+'">'+
-      '<td class="unit" title="'+esc(p.pn)+'">'+esc(p.pn)+"</td>"+
+      '<td class="unit" title="'+esc(p.pn)+'">'+esc(p.pn)+(p.edited?'<span class="edot" title="edited"></span>':"")+"</td>"+
       '<td title="'+esc(p.desc)+'">'+esc(p.desc)+"</td>"+
       '<td class="soft">'+esc(p.cat)+"</td>"+
       "<td>"+(p.ser?'<span class="pill p-ser">Serialized</span>':'<span style="font-size:13px;color:var(--muted)">Quantity</span>')+"</td>"+
-      '<td class="num"><b style="color:var(--ink)">'+p.oh+"</b>"+
+      '<td class="ed num countcell"><input type="number" min="0" step="1" data-pn="'+esc(p.pn)+'" data-f="oh" value="'+p.oh+'">'+
         '<span class="bararea"><span class="barfill" style="width:'+pct+'%;background:'+col+'"></span></span></td>'+
       '<td class="num">'+(p.onord>0?'<span class="pill p-ord">'+p.onord+"</span>":'<span style="color:#C3CBD8">—</span>')+"</td>"+
       '<td><span class="pill '+s.c+'">'+s.t+"</span></td>"+
-      "<td>"+esc(p.bin)+"</td>"+
-      '<td class="num"><b style="color:var(--ink)">'+money2(p.retail)+"</b></td>"+
+      '<td class="ed"><input type="text" data-pn="'+esc(p.pn)+'" data-f="bin" value="'+esc(p.bin)+'"></td>'+
+      '<td class="ed num"><input type="text" data-pn="'+esc(p.pn)+'" data-f="retail" value="'+money2(p.retail)+'"></td>'+
     "</tr>";
   }).join("");
 }
@@ -946,6 +968,40 @@ function owner(){
   $("lk3l").textContent="Committed on open orders not yet delivered";
 }
 
+/* ---------- audit trail ---------- */
+function who(){ var el=$("whoami"); return el?el.value.split(" \u2014 ")[0]:"Office"; }
+function stamp(){
+  var d=new Date();
+  return "Today "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+}
+function audit(pn, field, from, to){
+  LOG.unshift({when:stamp(), cls:"d-edit", edit:true,
+    html:"<b>"+esc(pn)+"</b> \u2014 "+field+" changed from <b>"+esc(from)+"</b> to <b>"+esc(to)+"</b>",
+    who:who()});
+  logView();
+}
+$("tb").addEventListener("change",function(e){
+  var el=e.target;
+  if(!el.hasAttribute||!el.hasAttribute("data-pn")) return;
+  var p=byPn(el.getAttribute("data-pn")); if(!p) return;
+  var f=el.getAttribute("data-f");
+  if(f==="oh"){
+    var was=p.oh, now=parseInt(el.value,10); if(isNaN(now)||now<0) now=0;
+    if(was===now) return;
+    p.oh=now; p.edited=true; p.days=0;
+    audit(p.pn,"count on hand",was,now);
+  } else if(f==="bin"){
+    var wasB=p.bin, nowB=el.value.trim();
+    if(wasB===nowB) return;
+    p.bin=nowB; p.edited=true; audit(p.pn,"bin",wasB,nowB||"(empty)");
+  } else if(f==="retail"){
+    var wasR=p.retail, nowR=parseFloat(String(el.value).replace(/[$,]/g,""));
+    if(isNaN(nowR)||nowR<0||wasR===nowR){ refresh(); return; }
+    p.retail=nowR; p.edited=true; audit(p.pn,"retail price",money2(wasR),money2(nowR));
+  }
+  refresh();
+});
+
 /* ---------- part record ---------- */
 function openRec(pn){
   var p=byPn(pn); if(!p) return;
@@ -1020,6 +1076,7 @@ $("veil").addEventListener("click",closeRec);
 $("rX").addEventListener("click",closeRec);
 document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeRec(); });
 $("tb").addEventListener("click",function(e){
+  if(e.target.closest("td.ed")) return;
   var tr=e.target.closest("tr.prow");
   if(tr) openRec(tr.getAttribute("data-pn"));
 });
