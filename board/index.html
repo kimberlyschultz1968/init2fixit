@@ -61,20 +61,40 @@
   .btn-clear{padding:9px 15px;border:1px solid var(--line);background:var(--paper);border-radius:7px;font:inherit;font-size:13.5px;color:var(--body);cursor:pointer}
   .btn-clear:hover{border-color:#AFC3E6}
 
-  .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(22,31,49,.06),0 6px 18px rgba(22,31,49,.05)}
   .scroll{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;min-width:940px}
+  table{width:100%;border-collapse:collapse}
+  #tbl{table-layout:fixed;width:1393px}
   th{
-    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);
-    text-align:left;padding:7px 11px;background:linear-gradient(180deg,#FAFCFE,#EDF1F8);
-    border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none;
+    font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;color:#B9CDF4;
+    text-align:left;padding:10px 12px;background:linear-gradient(180deg,#2A5BDD,#12309B);
+    border-bottom:none;white-space:nowrap;cursor:pointer;user-select:none;
   }
-  th:hover{color:var(--ink)}
-  th .ar{opacity:.35;font-size:9px;margin-left:3px}
-  th.sorted .ar{opacity:1;color:var(--blue)}
-  td{padding:7px 11px;border-bottom:1px solid var(--faint);vertical-align:middle;font-size:13.5px}
-  tbody tr:nth-child(even) td{background:var(--zebra)}
-  tbody tr:hover td{background:#E8F0FE}
+  th:first-child{padding-left:18px}
+  th:hover{color:#fff}
+  th .ar{opacity:.4;font-size:9px;margin-left:3px}
+  th.sorted .ar{opacity:1;color:#fff}
+  td{padding:0 12px;border-bottom:1px solid var(--faint);vertical-align:middle;font-size:13px;
+     color:var(--body);height:38px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:#F3F8FF}
+  tbody tr:hover td:first-child::before{width:6px}
+
+  /* status spine down the left edge - the row reads as an object, not a cell */
+  tbody td:first-child{position:relative;padding-left:18px}
+  tbody td:first-child::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--line);transition:width .12s}
+  tbody tr.r-out td:first-child::before{background:#1E4FD6}
+  tbody tr.r-due td:first-child::before{background:#B7791F}
+  tbody tr.r-overdue td:first-child::before{background:#C0392B}
+  tbody tr.r-service td:first-child::before{background:#6B4FA8}
+  tbody tr.r-ready td:first-child::before{background:#2F6B38}
+
+  /* typographic hierarchy - the identifier leads, the rest supports */
+  td.unit{font-weight:700;color:var(--ink);font-size:14px;letter-spacing:-.1px}
+  td.soft{color:var(--muted);font-size:12.5px}
+  td.cust{color:var(--ink);font-weight:600}
+  td.rate{color:var(--ink);font-weight:700}
   tbody tr.flash td{background:#FFF6D9;transition:background 2.4s}
   .unit{font-weight:700;color:var(--ink)}
   .sub{display:block;font-size:12px;color:var(--muted);font-weight:400}
@@ -85,7 +105,9 @@
   .p-over{color:#96271B;background:#FDE4E1;border:1px solid #F5C2BB}
   .p-svc{color:#4A3480;background:#EEE8FA;border:1px solid #D8CCF1}
   .p-ready{color:#1E4B26;background:#E3F2E6;border:1px solid #C2E0C8}
-  .late{color:var(--over);font-weight:700}
+  .late{display:inline-block;padding:2px 9px;border-radius:5px;background:#FDE4E1;
+    border:1px solid #F5C2BB;color:#96271B;font-weight:700;font-size:11.5px;letter-spacing:.02em}
+  .dash{color:#C3CBD8}
   .empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:15px}
 
   /* forms */
@@ -217,6 +239,10 @@
     .per{padding:10px 14px;font-size:13px} .brow .bn{width:96px}
     .plot{margin-left:46px} .gl span{left:-46px;width:40px} .xlabels{margin-left:46px}
   }
+  .mono{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--muted)}
+  .over{color:#C0392B;font-weight:700}
+  .under{color:#2F6B38;font-weight:700}
+  td.unit,td.prop{font-weight:700;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -265,16 +291,19 @@
 
     <div class="panel">
       <div class="scroll">
-        <table>
+        <table id="tbl">
+          <colgroup><col style="width:185px"><col style="width:170px"><col style="width:110px"><col style="width:120px"><col style="width:190px"><col style="width:220px"><col style="width:92px"><col style="width:96px"><col style="width:92px"><col style="width:118px"></colgroup>
           <thead>
             <tr>
               <th data-k="unit">Unit <span class="ar">&#9650;</span></th>
+              <th data-k="kind">Kind <span class="ar">&#9650;</span></th>
+              <th data-k="asset">Asset # <span class="ar">&#9650;</span></th>
               <th data-k="status">Status <span class="ar">&#9650;</span></th>
               <th data-k="customer">Rented to <span class="ar">&#9650;</span></th>
               <th data-k="site">Job site / event <span class="ar">&#9650;</span></th>
               <th data-k="outd">Went out <span class="ar">&#9650;</span></th>
               <th data-k="due">Due back <span class="ar">&#9650;</span></th>
-              <th data-k="days">Days <span class="ar">&#9650;</span></th>
+              <th data-k="days">Days late <span class="ar">&#9650;</span></th>
               <th data-k="rate">Rate <span class="ar">&#9650;</span></th>
             </tr>
           </thead>
@@ -743,18 +772,24 @@ function draw(){
   }
   var tb=document.getElementById("rows");
   if(!rows.length){
-    tb.innerHTML='<tr><td colspan="8" class="empty">Nothing matches that. <b>Show all</b> puts the yard back.</td></tr>';
+    tb.innerHTML='<tr><td colspan="10" class="empty">Nothing matches that. <b>Show all</b> puts the yard back.</td></tr>';
   } else {
     var out="";
     for(var r=0;r<rows.length;r++){
       var d2=rows[r], m=META[d2.status];
-      var days=d2.status==="overdue"?'<span class="late">'+d2.days+' late</span>':"—";
-      out+='<tr'+(d2.unit===flashUnit?' class="flash"':'')+'>'
-        +'<td><span class="unit">'+d2.unit+'</span><span class="sub">'+d2.sub+'</span></td>'
+      var days=d2.status==="overdue"?'<span class="late">'+d2.days+' days</span>':'<span class="dash">—</span>';
+      var sp=String(d2.sub).split(" · ");
+      var kind=sp[0]||"", asset=sp[1]||"";
+      var dash=function(v){ return (v==="—"||v==="")?'<span class="dash">—</span>':v; };
+      out+='<tr class="r-'+d2.status+(d2.unit===flashUnit?' flash':'')+'">'
+        +'<td class="unit" title="'+d2.unit+'">'+d2.unit+'</td>'
+        +'<td class="soft" title="'+kind+'">'+kind+'</td>'
+        +'<td class="mono" title="'+asset+'">'+asset+'</td>'
         +'<td><span class="pill '+m.cls+'">'+m.label+'</span></td>'
-        +'<td>'+d2.customer+'</td><td>'+d2.site+'</td>'
-        +'<td class="num">'+d2.outd+'</td><td class="num">'+d2.due+'</td>'
-        +'<td class="num">'+days+'</td><td class="num">'+d2.rate+'</td></tr>';
+        +'<td class="cust" title="'+d2.customer+'">'+dash(d2.customer)+'</td>'
+        +'<td class="soft" title="'+d2.site+'">'+d2.site+'</td>'
+        +'<td class="num soft">'+dash(d2.outd)+'</td><td class="num">'+dash(d2.due)+'</td>'
+        +'<td class="num">'+days+'</td><td class="num rate">'+d2.rate+'</td></tr>';
     }
     tb.innerHTML=out;
   }

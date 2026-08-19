@@ -56,12 +56,13 @@
 
   .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
   .scroll{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;min-width:980px}
+  table{width:100%;border-collapse:collapse}
+  #tbl{table-layout:fixed;width:1650px}
   th{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);text-align:left;padding:7px 11px;background:linear-gradient(180deg,#FBFDFB,#EAF1EB);border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
   th:hover{color:var(--ink)}
   th .ar{opacity:.35;font-size:9px;margin-left:3px}
   th.sorted .ar{opacity:1;color:var(--green-mid)}
-  td{padding:7px 11px;border-bottom:1px solid var(--faint);vertical-align:middle;font-size:13.5px}
+  td{padding:0 9px;border-bottom:1px solid var(--faint);border-right:1px solid var(--faint);vertical-align:middle;font-size:13px;height:29px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   tbody tr:nth-child(even) td{background:var(--zebra)}
   tbody tr:hover td{background:#E9F3EB}
   tbody tr.flash td{background:#FFF6D9;transition:background 2.4s}
@@ -192,6 +193,10 @@
     .per{padding:10px 13px;font-size:13px} .brow .bn{width:104px}
     .plot{margin-left:46px} .gl span{left:-46px;width:40px} .xlabels{margin-left:46px}
   }
+  .mono{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--muted)}
+  .over{color:#C0392B;font-weight:700}
+  .under{color:#2F6B38;font-weight:700}
+  td.unit,td.prop{font-weight:700;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -240,17 +245,24 @@
 
     <div class="panel">
       <div class="scroll">
-        <table>
+        <table id="tbl">
+          <colgroup><col style="width:185px"><col style="width:168px"><col style="width:130px"><col style="width:122px"><col style="width:78px"><col style="width:108px"><col style="width:175px"><col style="width:92px"><col style="width:108px"><col style="width:70px"><col style="width:70px"><col style="width:96px"><col style="width:88px"><col style="width:160px"></colgroup>
           <thead>
             <tr>
               <th data-k="prop">Property <span class="ar">&#9650;</span></th>
+              <th data-k="size">Size <span class="ar">&#9650;</span></th>
+              <th data-k="acct">Account manager <span class="ar">&#9650;</span></th>
               <th data-k="status">Status <span class="ar">&#9650;</span></th>
               <th data-k="crew">Crew <span class="ar">&#9650;</span></th>
+              <th data-k="lead">Crew lead <span class="ar">&#9650;</span></th>
               <th data-k="svc">Service <span class="ar">&#9650;</span></th>
-              <th data-k="arr">On site <span class="ar">&#9650;</span></th>
+              <th data-k="arr">Arrived <span class="ar">&#9650;</span></th>
+              <th data-k="dep">Departed <span class="ar">&#9650;</span></th>
               <th data-k="hrs">Hours <span class="ar">&#9650;</span></th>
               <th data-k="bud">Budget <span class="ar">&#9650;</span></th>
+              <th data-k="var">Over / under <span class="ar">&#9650;</span></th>
               <th data-k="pics">Proof <span class="ar">&#9650;</span></th>
+              <th data-k="note">Note <span class="ar">&#9650;</span></th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -615,7 +627,7 @@ function draw(){
   }
   var tb=document.getElementById("rows");
   if(!rows.length){
-    tb.innerHTML='<tr><td colspan="8" class="empty">Nothing matches that. <b>Show all</b> puts the schedule back.</td></tr>';
+    tb.innerHTML='<tr><td colspan="14" class="empty">Nothing matches that. <b>Show all</b> puts the schedule back.</td></tr>';
   } else {
     var out="";
     for(i=0;i<rows.length;i++){
@@ -627,13 +639,36 @@ function draw(){
         else hrs='<span class="under">'+r.hrs.toFixed(1)+'</span>';
       }
       var pics = r.pics>0 ? '<span class="cam">'+r.pics+' photos</span>' : '<span class="cam">—</span>';
+      var sp=String(r.sub).split(" · ");
+      var size=sp[0]||"", acct=sp[1]||"";
+      var cw=String(r.crew).split(" — ");
+      var crew=cw[0]||"", lead=cw[1]||"";
+      var raw=String(r.arr), arrv='<span style="color:var(--muted)">—</span>',
+          dep='<span style="color:var(--muted)">—</span>', note="";
+      if(raw.indexOf("–")>-1){
+        var ar=raw.split("–");
+        arrv=(ar[0]||"").trim();
+        var dd=(ar[1]||"").trim();
+        dep = dd ? dd : '<span style="color:var(--muted)">still on site</span>';
+      } else { note=raw; }
+      var vr="—";
+      if(r.hrs>0){
+        var diff=Math.round((r.hrs-r.bud)*10)/10;
+        vr = diff>0 ? '<span class="over">+'+diff.toFixed(1)+'</span>'
+           : (diff<0 ? '<span class="under">'+diff.toFixed(1)+'</span>' : '0.0');
+      }
       out+='<tr'+(r.prop===flashProp?' class="flash"':'')+'>'
-        +'<td><span class="prop">'+r.prop+'</span><span class="sub">'+r.sub+'</span></td>'
+        +'<td class="prop" title="'+r.prop+'">'+r.prop+'</td>'
+        +'<td title="'+size+'">'+size+'</td>'
+        +'<td title="'+acct+'">'+acct+'</td>'
         +'<td><span class="pill '+m.cls+'">'+m.label+'</span></td>'
-        +'<td>'+r.crew+'</td><td>'+r.svc+'</td>'
-        +'<td class="num">'+r.arr+'</td>'
+        +'<td>'+crew+'</td><td>'+lead+'</td>'
+        +'<td title="'+r.svc+'">'+r.svc+'</td>'
+        +'<td class="num">'+arrv+'</td><td class="num">'+dep+'</td>'
         +'<td class="num">'+hrs+'</td><td class="num">'+bud+'</td>'
-        +'<td>'+pics+'</td></tr>';
+        +'<td class="num">'+vr+'</td>'
+        +'<td>'+pics+'</td>'
+        +'<td style="color:var(--muted)" title="'+note+'">'+note+'</td></tr>';
     }
     tb.innerHTML=out;
   }

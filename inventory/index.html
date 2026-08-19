@@ -56,12 +56,13 @@
 
   .panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(22,31,49,.05)}
   .scroll{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;min-width:1000px}
+  table{width:100%;border-collapse:collapse}
+  #tbl{table-layout:fixed;width:1674px}
   th{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);text-align:left;padding:7px 11px;background:linear-gradient(180deg,#FAFCFE,#EDF1F8);border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
   th:hover{color:var(--ink)}
   th .ar{opacity:.35;font-size:9px;margin-left:3px}
   th.sorted .ar{opacity:1;color:var(--blue)}
-  td{padding:7px 11px;border-bottom:1px solid var(--faint);vertical-align:middle;font-size:13.5px}
+  td{padding:0 9px;border-bottom:1px solid var(--faint);border-right:1px solid var(--faint);vertical-align:middle;font-size:13px;height:29px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   tbody tr:nth-child(even) td{background:var(--zebra)}
   tbody tr:hover td{background:#E8F0FE}
   tbody tr.flash td{background:#FFF6D9;transition:background 2.4s}
@@ -76,7 +77,7 @@
   .p-ser{color:#12309B;background:#E4ECFD;border:1px solid #C3D5F8}
   .bad{color:var(--outq);font-weight:700}
   .empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:15px}
-  .bararea{display:block;height:5px;background:var(--faint);border-radius:3px;overflow:hidden;margin-top:5px;min-width:70px}
+  .bararea{display:block;height:5px;background:var(--faint);border-radius:3px;overflow:hidden;margin-top:3px;min-width:0}
   .barfill{display:block;height:100%;border-radius:3px}
 
   .formwrap{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:15px}
@@ -188,6 +189,10 @@
     .three{grid-template-columns:1fr}
   }
   @media (max-width:560px){ .tiles{grid-template-columns:repeat(2,1fr)} }
+  .mono{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--muted)}
+  .over{color:#C0392B;font-weight:700}
+  .under{color:#2F6B38;font-weight:700}
+  td.unit,td.prop{font-weight:700;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -235,9 +240,11 @@
     </div>
     <div class="panel"><div class="scroll">
       <table id="tbl">
-        <thead><tr>
+        <colgroup><col style="width:118px"><col style="width:210px"><col style="width:108px"><col style="width:132px"><col style="width:112px"><col style="width:84px"><col style="width:62px"><col style="width:62px"><col style="width:88px"><col style="width:128px"><col style="width:66px"><col style="width:230px"><col style="width:92px"><col style="width:92px"><col style="width:90px"></colgroup>
+          <thead><tr>
           <th data-k="pn">Part number<span class="ar">▲</span></th>
           <th data-k="desc">Description<span class="ar">▲</span></th>
+          <th data-k="cat">Category<span class="ar">▲</span></th>
           <th data-k="upc">UPC<span class="ar">▲</span></th>
           <th data-k="kind">Type<span class="ar">▲</span></th>
           <th data-k="oh" class="num">On hand<span class="ar">▲</span></th>
@@ -246,7 +253,10 @@
           <th data-k="onord" class="num">On order<span class="ar">▲</span></th>
           <th data-k="st">Status<span class="ar">▲</span></th>
           <th data-k="bin">Bin<span class="ar">▲</span></th>
+          <th data-k="vend">Vendor<span class="ar">▲</span></th>
+          <th data-k="cost" class="num">Unit cost<span class="ar">▲</span></th>
           <th data-k="val" class="num">Value<span class="ar">▲</span></th>
+          <th data-k="days" class="num">Last moved<span class="ar">▲</span></th>
         </tr></thead>
         <tbody id="tb"></tbody>
       </table>
@@ -578,20 +588,22 @@ function rows(){
     if(sortK==="val"){ x=a.oh*a.cost; y=b.oh*b.cost; }
     else if(sortK==="kind"){ x=a.ser; y=b.ser; }
     else if(sortK==="st"){ x=status(a).k; y=status(b).k; }
+    else if(sortK==="cost"){ x=a.cost; y=b.cost; }
     else { x=a[sortK]; y=b[sortK]; }
     if(typeof x==="string"){ return sortAsc ? x.localeCompare(y) : y.localeCompare(x); }
     return sortAsc ? x-y : y-x;
   });
   $("hint").textContent = list.length===P.length ? "" : list.length+" of "+P.length+" parts";
-  if(!list.length){ $("tb").innerHTML='<tr><td colspan="11" class="empty">Nothing matches that.</td></tr>'; return; }
+  if(!list.length){ $("tb").innerHTML='<tr><td colspan="15" class="empty">Nothing matches that.</td></tr>'; return; }
   $("tb").innerHTML = list.map(function(p){
     var s=status(p);
     var pct = Math.min(100, Math.round(p.oh/p.max*100));
     var col = s.k==="out" ? "#C0392B" : (s.k==="low" ? "#B7791F" : "#2F6B38");
     return "<tr>"+
-      '<td><span class="unit">'+esc(p.pn)+'</span><span class="sub">'+esc(p.vend)+'</span></td>'+
-      "<td>"+esc(p.desc)+'<span class="sub">'+esc(p.cat)+"</span></td>"+
-      '<td class="num" style="text-align:left;font-size:13px;color:var(--muted)">'+esc(p.upc)+"</td>"+
+      '<td class="unit" title="'+esc(p.pn)+'">'+esc(p.pn)+"</td>"+
+      '<td title="'+esc(p.desc)+'">'+esc(p.desc)+"</td>"+
+      '<td style="color:var(--muted)">'+esc(p.cat)+"</td>"+
+      '<td class="mono" style="font-size:12.5px;color:var(--muted)">'+esc(p.upc)+"</td>"+
       "<td>"+(p.ser?'<span class="pill p-ser">Serialized</span>':'<span style="font-size:13px;color:var(--muted)">Quantity</span>')+"</td>"+
       '<td class="num"><b style="color:var(--ink)">'+p.oh+"</b>"+
         '<span class="bararea"><span class="barfill" style="width:'+pct+'%;background:'+col+'"></span></span></td>'+
@@ -600,7 +612,10 @@ function rows(){
       '<td class="num">'+(p.onord>0?'<span class="pill p-ord">'+p.onord+"</span>":'<span style="color:var(--muted)">—</span>')+"</td>"+
       '<td><span class="pill '+s.c+'">'+s.t+"</span></td>"+
       "<td>"+esc(p.bin)+"</td>"+
-      '<td class="num">'+money(p.oh*p.cost)+"</td>"+
+      '<td title="'+esc(p.vend)+'">'+esc(p.vend)+"</td>"+
+      '<td class="num">'+money2(p.cost)+"</td>"+
+      '<td class="num"><b style="color:var(--ink)">'+money(p.oh*p.cost)+"</b></td>"+
+      '<td class="num" style="color:'+(p.days>30?"#C0392B":"var(--muted)")+'">'+(p.days===0?"today":p.days+"d")+"</td>"+
     "</tr>";
   }).join("");
 }
