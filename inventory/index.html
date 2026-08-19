@@ -320,7 +320,7 @@
           <th data-k="onord" class="num">On order<span class="ar">▲</span></th>
           <th data-k="st">Status<span class="ar">▲</span></th>
           <th data-k="bin">Bin<span class="ar">▲</span></th>
-          <th data-k="val" class="num">Value<span class="ar">▲</span></th>
+          <th data-k="retail" class="num">Retail<span class="ar">▲</span></th>
         </tr></thead>
         <tbody id="tb"></tbody>
       </table>
@@ -542,28 +542,28 @@
 
 /* ---------- data ---------- */
 var P = [
- {pn:"FLT-8842",  desc:"Hydraulic return filter",      upc:"0 41234 88421 7", ser:0, oh:14, min:8,  max:30, bin:"A-12", cost:38.50,  vend:"Filter Direct",                cat:"Filters",    days:3},
- {pn:"FLT-2210",  desc:"Engine oil filter, 4-cyl",     upc:"0 41234 22103 2", ser:0, oh:41, min:20, max:60, bin:"A-14", cost:12.75,  vend:"Filter Direct",                cat:"Filters",    days:1},
- {pn:"FLT-6603",  desc:"Air filter element, large",    upc:"0 41234 66031 9", ser:0, oh:3,  min:10, max:24, bin:"A-16", cost:44.20,  vend:"Filter Direct",                cat:"Filters",    days:2},
- {pn:"HYD-1200",  desc:"Hydraulic hose 1/2in x 60in",  upc:"7 65432 12004 1", ser:0, oh:6,  min:12, max:36, bin:"B-03", cost:62.00,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:4},
- {pn:"HYD-1201",  desc:"Hydraulic hose 3/8in x 48in",  upc:"7 65432 12011 9", ser:0, oh:19, min:10, max:30, bin:"B-04", cost:48.90,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:6},
- {pn:"HYD-4455",  desc:"Quick coupler, 1/2in flat",    upc:"7 65432 44553 4", ser:0, oh:0,  min:6,  max:20, bin:"B-09", cost:31.40,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:9},
- {pn:"HYD-9001",  desc:"Hydraulic pump, gear type",    upc:"7 65432 90013 8", ser:1, oh:2,  min:2,  max:5,  bin:"C-01", cost:840.00, vend:"National Equipment Wholesale", cat:"Hydraulics", days:38},
- {pn:"ENG-3300",  desc:"Engine, 14hp horizontal",      upc:"3 98765 33001 5", ser:1, oh:1,  min:1,  max:3,  bin:"C-04", cost:1290.00,vend:"Midwest Engine Parts",         cat:"Engines",    days:52},
- {pn:"ENG-3312",  desc:"Carburettor assembly",         upc:"3 98765 33124 6", ser:0, oh:7,  min:4,  max:12, bin:"C-06", cost:96.30,  vend:"Midwest Engine Parts",         cat:"Engines",    days:11},
- {pn:"ENG-7710",  desc:"Starter motor",                upc:"3 98765 77103 3", ser:1, oh:4,  min:2,  max:6,  bin:"C-08", cost:214.00, vend:"Midwest Engine Parts",         cat:"Engines",    days:16},
- {pn:"BLT-5502",  desc:"V-belt, 52in",                 upc:"1 22334 55028 0", ser:0, oh:22, min:10, max:40, bin:"D-02", cost:18.60,  vend:"Coastal Parts Supply",         cat:"Drive",      days:5},
- {pn:"BLT-5510",  desc:"V-belt, 68in",                 upc:"1 22334 55105 7", ser:0, oh:4,  min:8,  max:24, bin:"D-03", cost:21.10,  vend:"Coastal Parts Supply",         cat:"Drive",      days:7},
- {pn:"BRG-2040",  desc:"Sealed bearing, 40mm",         upc:"1 22334 20408 3", ser:0, oh:31, min:12, max:40, bin:"D-07", cost:26.75,  vend:"Coastal Parts Supply",         cat:"Drive",      days:8},
- {pn:"TIR-1600",  desc:"Pneumatic tyre 16in, turf",    upc:"5 55112 16003 2", ser:0, oh:9,  min:6,  max:20, bin:"E-01", cost:74.00,  vend:"National Equipment Wholesale", cat:"Wheels",     days:14},
- {pn:"TIR-1601",  desc:"Solid tyre 16in",              upc:"5 55112 16010 0", ser:0, oh:2,  min:4,  max:12, bin:"E-02", cost:118.50, vend:"National Equipment Wholesale", cat:"Wheels",     days:63},
- {pn:"CTL-8800",  desc:"Control module, digital",      upc:"9 11223 88005 4", ser:1, oh:3,  min:1,  max:4,  bin:"F-01", cost:1150.00,vend:"National Equipment Wholesale", cat:"Electrical", days:47},
- {pn:"ELE-1120",  desc:"Battery, group 24",            upc:"9 11223 11207 1", ser:0, oh:11, min:6,  max:18, bin:"F-04", cost:142.00, vend:"Coastal Parts Supply",         cat:"Electrical", days:6},
- {pn:"ELE-4402",  desc:"Wiring harness, main",         upc:"9 11223 44026 8", ser:0, oh:1,  min:3,  max:8,  bin:"F-06", cost:187.40, vend:"Coastal Parts Supply",         cat:"Electrical", days:29},
- {pn:"CON-0101",  desc:"Hydraulic oil, 5 gal pail",    upc:"0 41234 01015 6", ser:0, oh:16, min:8,  max:24, bin:"G-01", cost:89.00,  vend:"Coastal Parts Supply",         cat:"Consumables",days:2},
- {pn:"CON-0210",  desc:"Grease cartridge, case of 10", upc:"0 41234 02106 1", ser:0, oh:5,  min:6,  max:20, bin:"G-03", cost:52.25,  vend:"Coastal Parts Supply",         cat:"Consumables",days:4},
- {pn:"CON-0330",  desc:"Shop rags, bale",              upc:"0 41234 03302 7", ser:0, oh:28, min:10, max:30, bin:"G-05", cost:34.00,  vend:"Coastal Parts Supply",         cat:"Consumables",days:9},
- {pn:"SEA-7701",  desc:"Cylinder seal kit, 2in bore",  upc:"7 65432 77015 2", ser:0, oh:2,  min:5,  max:15, bin:"B-11", cost:67.80,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:21}
+ {pn:"FLT-8842",  desc:"Hydraulic return filter",      upc:"0 41234 88421 7", ser:0, oh:14, min:8,  max:30, bin:"A-12", cost:38.50, retail:84.95,  vend:"Filter Direct",                cat:"Filters",    days:3},
+ {pn:"FLT-2210",  desc:"Engine oil filter, 4-cyl",     upc:"0 41234 22103 2", ser:0, oh:41, min:20, max:60, bin:"A-14", cost:12.75, retail:28.95,  vend:"Filter Direct",                cat:"Filters",    days:1},
+ {pn:"FLT-6603",  desc:"Air filter element, large",    upc:"0 41234 66031 9", ser:0, oh:3,  min:10, max:24, bin:"A-16", cost:44.20, retail:96.50,  vend:"Filter Direct",                cat:"Filters",    days:2},
+ {pn:"HYD-1200",  desc:"Hydraulic hose 1/2in x 60in",  upc:"7 65432 12004 1", ser:0, oh:6,  min:12, max:36, bin:"B-03", cost:62.00, retail:118.00,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:4},
+ {pn:"HYD-1201",  desc:"Hydraulic hose 3/8in x 48in",  upc:"7 65432 12011 9", ser:0, oh:19, min:10, max:30, bin:"B-04", cost:48.90, retail:94.00,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:6},
+ {pn:"HYD-4455",  desc:"Quick coupler, 1/2in flat",    upc:"7 65432 44553 4", ser:0, oh:0,  min:6,  max:20, bin:"B-09", cost:31.40, retail:62.50,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:9},
+ {pn:"HYD-9001",  desc:"Hydraulic pump, gear type",    upc:"7 65432 90013 8", ser:1, oh:2,  min:2,  max:5,  bin:"C-01", cost:840.00, retail:1145.00, vend:"National Equipment Wholesale", cat:"Hydraulics", days:38},
+ {pn:"ENG-3300",  desc:"Engine, 14hp horizontal",      upc:"3 98765 33001 5", ser:1, oh:1,  min:1,  max:3,  bin:"C-04", cost:1290.00, retail:1725.00,vend:"Midwest Engine Parts",         cat:"Engines",    days:52},
+ {pn:"ENG-3312",  desc:"Carburettor assembly",         upc:"3 98765 33124 6", ser:0, oh:7,  min:4,  max:12, bin:"C-06", cost:96.30, retail:189.00,  vend:"Midwest Engine Parts",         cat:"Engines",    days:11},
+ {pn:"ENG-7710",  desc:"Starter motor",                upc:"3 98765 77103 3", ser:1, oh:4,  min:2,  max:6,  bin:"C-08", cost:214.00, retail:349.00, vend:"Midwest Engine Parts",         cat:"Engines",    days:16},
+ {pn:"BLT-5502",  desc:"V-belt, 52in",                 upc:"1 22334 55028 0", ser:0, oh:22, min:10, max:40, bin:"D-02", cost:18.60, retail:39.95,  vend:"Coastal Parts Supply",         cat:"Drive",      days:5},
+ {pn:"BLT-5510",  desc:"V-belt, 68in",                 upc:"1 22334 55105 7", ser:0, oh:4,  min:8,  max:24, bin:"D-03", cost:21.10, retail:44.95,  vend:"Coastal Parts Supply",         cat:"Drive",      days:7},
+ {pn:"BRG-2040",  desc:"Sealed bearing, 40mm",         upc:"1 22334 20408 3", ser:0, oh:31, min:12, max:40, bin:"D-07", cost:26.75, retail:56.00,  vend:"Coastal Parts Supply",         cat:"Drive",      days:8},
+ {pn:"TIR-1600",  desc:"Pneumatic tyre 16in, turf",    upc:"5 55112 16003 2", ser:0, oh:9,  min:6,  max:20, bin:"E-01", cost:74.00, retail:129.00,  vend:"National Equipment Wholesale", cat:"Wheels",     days:14},
+ {pn:"TIR-1601",  desc:"Solid tyre 16in",              upc:"5 55112 16010 0", ser:0, oh:2,  min:4,  max:12, bin:"E-02", cost:118.50, retail:199.00, vend:"National Equipment Wholesale", cat:"Wheels",     days:63},
+ {pn:"CTL-8800",  desc:"Control module, digital",      upc:"9 11223 88005 4", ser:1, oh:3,  min:1,  max:4,  bin:"F-01", cost:1150.00, retail:1545.00,vend:"National Equipment Wholesale", cat:"Electrical", days:47},
+ {pn:"ELE-1120",  desc:"Battery, group 24",            upc:"9 11223 11207 1", ser:0, oh:11, min:6,  max:18, bin:"F-04", cost:142.00, retail:229.00, vend:"Coastal Parts Supply",         cat:"Electrical", days:6},
+ {pn:"ELE-4402",  desc:"Wiring harness, main",         upc:"9 11223 44026 8", ser:0, oh:1,  min:3,  max:8,  bin:"F-06", cost:187.40, retail:315.00, vend:"Coastal Parts Supply",         cat:"Electrical", days:29},
+ {pn:"CON-0101",  desc:"Hydraulic oil, 5 gal pail",    upc:"0 41234 01015 6", ser:0, oh:16, min:8,  max:24, bin:"G-01", cost:89.00, retail:158.00,  vend:"Coastal Parts Supply",         cat:"Consumables",days:2},
+ {pn:"CON-0210",  desc:"Grease cartridge, case of 10", upc:"0 41234 02106 1", ser:0, oh:5,  min:6,  max:20, bin:"G-03", cost:52.25, retail:96.00,  vend:"Coastal Parts Supply",         cat:"Consumables",days:4},
+ {pn:"CON-0330",  desc:"Shop rags, bale",              upc:"0 41234 03302 7", ser:0, oh:28, min:10, max:30, bin:"G-05", cost:34.00, retail:62.00,  vend:"Coastal Parts Supply",         cat:"Consumables",days:9},
+ {pn:"SEA-7701",  desc:"Cylinder seal kit, 2in bore",  upc:"7 65432 77015 2", ser:0, oh:2,  min:5,  max:15, bin:"B-11", cost:67.80, retail:135.00,  vend:"Hydraulic & Hose Co.",         cat:"Hydraulics", days:21}
 ];
 P.forEach(function(p){ p.onord = 0; p.serials = []; });
 // pre-seed a couple of serials so serialized parts read as real
@@ -660,6 +660,7 @@ function rows(){
   list.sort(function(a,b){
     var x,y;
     if(sortK==="val"){ x=a.oh*a.cost; y=b.oh*b.cost; }
+    else if(sortK==="retail"){ x=a.retail; y=b.retail; }
     else if(sortK==="kind"){ x=a.ser; y=b.ser; }
     else if(sortK==="st"){ x=status(a).k; y=status(b).k; }
     else if(sortK==="cost"){ x=a.cost; y=b.cost; }
@@ -683,7 +684,7 @@ function rows(){
       '<td class="num">'+(p.onord>0?'<span class="pill p-ord">'+p.onord+"</span>":'<span style="color:#C3CBD8">—</span>')+"</td>"+
       '<td><span class="pill '+s.c+'">'+s.t+"</span></td>"+
       "<td>"+esc(p.bin)+"</td>"+
-      '<td class="num"><b style="color:var(--ink)">'+money(p.oh*p.cost)+"</b></td>"+
+      '<td class="num"><b style="color:var(--ink)">'+money2(p.retail)+"</b></td>"+
     "</tr>";
   }).join("");
 }
@@ -973,8 +974,11 @@ function openRec(pn){
   }
 
   h+='<div class="sect">Money</div>';
+  h+='<div class="kv"><span class="k">Retail price</span><span class="v">'+money2(p.retail)+"</span></div>";
   h+='<div class="kv"><span class="k">Unit cost</span><span class="v">'+money2(p.cost)+"</span></div>";
-  h+='<div class="kv"><span class="k">Value on the shelf</span><span class="v">'+money(p.oh*p.cost)+"</span></div>";
+  var marg=p.retail-p.cost, mpct=Math.round(marg/p.retail*100);
+  h+='<div class="kv"><span class="k">Margin</span><span class="v" style="color:#2F6B38">'+money2(marg)+" \u00b7 "+mpct+"%</span></div>";
+  h+='<div class="kv"><span class="k">Value on the shelf</span><span class="v">'+money(p.oh*p.cost)+" <span style=\"color:var(--muted);font-weight:400;font-size:11.5px\">at cost</span></span></div>";
   if(p.onord>0) h+='<div class="kv"><span class="k">Committed on order</span><span class="v">'+money(p.onord*p.cost)+"</span></div>";
 
   h+='<div class="sect">Where it comes from</div>';
