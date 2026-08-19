@@ -83,6 +83,45 @@
   .p-ser{color:#12309B;background:#E4ECFD;border:1px solid #C3D5F8}
   .bad{color:var(--outq);font-weight:700}
   .empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:15px}
+  tbody tr.prow{cursor:pointer}
+  td .cat{display:block;font-size:11px;color:var(--muted);margin-top:-3px}
+
+  /* ---- part record slide-over ---- */
+  .veil{position:fixed;inset:0;background:rgba(15,27,46,.42);opacity:0;pointer-events:none;
+        transition:opacity .18s;z-index:40}
+  .veil.on{opacity:1;pointer-events:auto}
+  .rec{position:fixed;top:0;right:0;bottom:0;width:min(460px,94vw);background:var(--paper);
+       box-shadow:-8px 0 34px rgba(15,27,46,.22);transform:translateX(102%);
+       transition:transform .22s cubic-bezier(.4,0,.2,1);z-index:41;display:flex;flex-direction:column}
+  .rec.on{transform:translateX(0)}
+  .rechead{padding:16px 20px;background:linear-gradient(160deg,#0E2878,#1E4FD6 60%,#12309B);color:#fff;flex:none}
+  .rechead .pn{font-size:19px;font-weight:800;letter-spacing:-.2px}
+  .rechead .ds{font-size:13.5px;color:#CFE0FF;margin-top:1px}
+  .rechead .x{position:absolute;top:13px;right:16px;width:28px;height:28px;border:none;border-radius:6px;
+    background:rgba(255,255,255,.16);color:#fff;font-size:17px;line-height:1;cursor:pointer;font-family:inherit}
+  .rechead .x:hover{background:rgba(255,255,255,.28)}
+  .recbody{padding:16px 20px 26px;overflow-y:auto;flex:1}
+  .sect{font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:800;color:var(--green-mid);
+        margin:16px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--faint)}
+  .sect:first-child{margin-top:0}
+  .kv{display:flex;justify-content:space-between;gap:14px;padding:5px 0;font-size:13.5px}
+  .kv .k{color:var(--muted)}
+  .kv .v{color:var(--ink);font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+  .lvl{margin:9px 0 3px}
+  .lvltrack{height:9px;background:var(--faint);border-radius:5px;position:relative;overflow:hidden}
+  .lvlfill{height:100%;border-radius:5px}
+  .lvlmark{position:absolute;top:-3px;bottom:-3px;width:2px;background:#161F31;opacity:.55}
+  .lvlcap{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:4px}
+  .sers{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .ser{font-size:11.5px;font-weight:700;color:#12309B;background:#E4ECFD;border:1px solid #C3D5F8;
+       border-radius:5px;padding:3px 9px;font-variant-numeric:tabular-nums}
+  .porow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--faint);font-size:13px}
+  .porow:last-child{border-bottom:none}
+  .porow b{color:var(--ink)}
+  .flag{background:linear-gradient(180deg,#FFF9EC,#FFF4DC);border:1px solid #F2DCA6;border-radius:8px;
+        padding:11px 13px;font-size:13px;color:#8A5B00;margin-top:14px}
+  .flag b{color:#7A4F00}
+  .none{font-size:13px;color:var(--muted);padding:6px 0}
   .bararea{display:block;height:5px;background:var(--faint);border-radius:3px;overflow:hidden;margin-top:3px;min-width:0}
   .barfill{display:block;height:100%;border-radius:3px}
 
@@ -255,23 +294,16 @@
     </div>
     <div class="panel"><div class="scroll">
       <table id="tbl">
-        <colgroup><col style="width:7.732%"><col style="width:10.4%"><col style="width:6.186%"><col style="width:8.542%"><col style="width:9.2%"><col style="width:5.302%"><col style="width:3.387%"><col style="width:3.387%"><col style="width:5.302%"><col style="width:10.6%"><col style="width:3.976%"><col style="width:9.34%"><col style="width:5.744%"><col style="width:5.891%"><col style="width:5.011%"></colgroup>
+        <colgroup><col style="width:12%"><col style="width:26%"><col style="width:11%"><col style="width:11%"><col style="width:9%"><col style="width:13%"><col style="width:7%"><col style="width:11%"></colgroup>
           <thead><tr>
           <th data-k="pn">Part number<span class="ar">▲</span></th>
           <th data-k="desc">Description<span class="ar">▲</span></th>
-          <th data-k="cat">Category<span class="ar">▲</span></th>
-          <th data-k="upc">UPC<span class="ar">▲</span></th>
           <th data-k="kind">Type<span class="ar">▲</span></th>
           <th data-k="oh" class="num">On hand<span class="ar">▲</span></th>
-          <th data-k="min" class="num">Min<span class="ar">▲</span></th>
-          <th data-k="max" class="num">Max<span class="ar">▲</span></th>
           <th data-k="onord" class="num">On order<span class="ar">▲</span></th>
           <th data-k="st">Status<span class="ar">▲</span></th>
           <th data-k="bin">Bin<span class="ar">▲</span></th>
-          <th data-k="vend">Vendor<span class="ar">▲</span></th>
-          <th data-k="cost" class="num">Unit cost<span class="ar">▲</span></th>
           <th data-k="val" class="num">Value<span class="ar">▲</span></th>
-          <th data-k="days" class="num">Last moved<span class="ar">▲</span></th>
         </tr></thead>
         <tbody id="tb"></tbody>
       </table>
@@ -471,6 +503,16 @@
 
 </div>
 
+<div class="veil" id="veil"></div>
+<aside class="rec" id="rec" aria-hidden="true">
+  <div class="rechead" style="position:relative">
+    <div class="pn" id="rPn"></div>
+    <div class="ds" id="rDs"></div>
+    <button class="x" id="rX" title="Close">&times;</button>
+  </div>
+  <div class="recbody" id="rBody"></div>
+</aside>
+
 <footer>
   IN IT 2 FIX IT &nbsp;·&nbsp; New Port Richey, Florida &nbsp;·&nbsp;
   <a href="https://init2fixit.com">init2fixit.com</a> &nbsp;·&nbsp;
@@ -609,28 +651,21 @@ function rows(){
     return sortAsc ? x-y : y-x;
   });
   $("hint").textContent = list.length===P.length ? "" : list.length+" of "+P.length+" parts";
-  if(!list.length){ $("tb").innerHTML='<tr><td colspan="15" class="empty">Nothing matches that.</td></tr>'; return; }
+  if(!list.length){ $("tb").innerHTML='<tr><td colspan="8" class="empty">Nothing matches that.</td></tr>'; return; }
   $("tb").innerHTML = list.map(function(p){
     var s=status(p);
     var pct = Math.min(100, Math.round(p.oh/p.max*100));
     var col = s.k==="out" ? "#C0392B" : (s.k==="low" ? "#B7791F" : "#2F6B38");
-    return "<tr>"+
+    return '<tr class="prow" data-pn="'+esc(p.pn)+'">'+
       '<td class="unit" title="'+esc(p.pn)+'">'+esc(p.pn)+"</td>"+
-      '<td title="'+esc(p.desc)+'">'+esc(p.desc)+"</td>"+
-      '<td style="color:var(--muted)">'+esc(p.cat)+"</td>"+
-      '<td class="mono" style="font-size:12.5px;color:var(--muted)">'+esc(p.upc)+"</td>"+
+      '<td title="'+esc(p.desc)+'">'+esc(p.desc)+'<span class="cat">'+esc(p.cat)+"</span></td>"+
       "<td>"+(p.ser?'<span class="pill p-ser">Serialized</span>':'<span style="font-size:13px;color:var(--muted)">Quantity</span>')+"</td>"+
       '<td class="num"><b style="color:var(--ink)">'+p.oh+"</b>"+
         '<span class="bararea"><span class="barfill" style="width:'+pct+'%;background:'+col+'"></span></span></td>'+
-      '<td class="num">'+p.min+"</td>"+
-      '<td class="num">'+p.max+"</td>"+
-      '<td class="num">'+(p.onord>0?'<span class="pill p-ord">'+p.onord+"</span>":'<span style="color:var(--muted)">—</span>')+"</td>"+
+      '<td class="num">'+(p.onord>0?'<span class="pill p-ord">'+p.onord+"</span>":'<span style="color:#C3CBD8">—</span>')+"</td>"+
       '<td><span class="pill '+s.c+'">'+s.t+"</span></td>"+
       "<td>"+esc(p.bin)+"</td>"+
-      '<td title="'+esc(p.vend)+'">'+esc(p.vend)+"</td>"+
-      '<td class="num">'+money2(p.cost)+"</td>"+
       '<td class="num"><b style="color:var(--ink)">'+money(p.oh*p.cost)+"</b></td>"+
-      '<td class="num" style="color:'+(p.days>30?"#C0392B":"var(--muted)")+'">'+(p.days===0?"today":p.days+"d")+"</td>"+
     "</tr>";
   }).join("");
 }
@@ -891,6 +926,81 @@ function owner(){
   $("lk3").textContent=money(ordVal);
   $("lk3l").textContent="Committed on open orders not yet delivered";
 }
+
+/* ---------- part record ---------- */
+function openRec(pn){
+  var p=byPn(pn); if(!p) return;
+  var st=status(p);
+  var pct=Math.min(100,Math.round(p.oh/p.max*100));
+  var minPct=Math.min(100,Math.round(p.min/p.max*100));
+  var col=st.k==="out"?"#C0392B":(st.k==="low"?"#B7791F":"#2F6B38");
+  var openPo=POS.filter(function(o){ return o.pn===p.pn && o.recd<o.qty; });
+  var recent=RECS.filter(function(r){ return r.pn===p.pn; }).slice(0,3);
+
+  $("rPn").textContent=p.pn;
+  $("rDs").textContent=p.desc;
+
+  var h="";
+  h+='<div class="sect">Stock level</div>';
+  h+='<div class="kv"><span class="k">On hand</span><span class="v" style="font-size:19px;color:'+col+'">'+p.oh+"</span></div>";
+  h+='<div class="lvl"><div class="lvltrack"><div class="lvlfill" style="width:'+pct+"%;background:"+col+'"></div>'+
+     '<div class="lvlmark" style="left:'+minPct+'%" title="minimum"></div></div>'+
+     '<div class="lvlcap"><span>0</span><span>min '+p.min+"</span><span>max "+p.max+"</span></div></div>";
+  h+='<div class="kv"><span class="k">Minimum</span><span class="v">'+p.min+"</span></div>";
+  h+='<div class="kv"><span class="k">Maximum</span><span class="v">'+p.max+"</span></div>";
+  h+='<div class="kv"><span class="k">On order</span><span class="v">'+(p.onord||"\u2014")+"</span></div>";
+  h+='<div class="kv"><span class="k">Status</span><span class="v"><span class="pill '+st.c+'">'+st.t+"</span></span></div>";
+  if((p.oh+p.onord)<p.min){
+    h+='<div class="flag"><b>Below minimum.</b> Ordering '+(p.max-p.oh-p.onord)+" would bring it back to maximum.</div>";
+  }
+
+  h+='<div class="sect">Money</div>';
+  h+='<div class="kv"><span class="k">Unit cost</span><span class="v">'+money2(p.cost)+"</span></div>";
+  h+='<div class="kv"><span class="k">Value on the shelf</span><span class="v">'+money(p.oh*p.cost)+"</span></div>";
+  if(p.onord>0) h+='<div class="kv"><span class="k">Committed on order</span><span class="v">'+money(p.onord*p.cost)+"</span></div>";
+
+  h+='<div class="sect">Where it comes from</div>';
+  h+='<div class="kv"><span class="k">Vendor</span><span class="v">'+esc(p.vend)+"</span></div>";
+  h+='<div class="kv"><span class="k">Category</span><span class="v">'+esc(p.cat)+"</span></div>";
+  h+='<div class="kv"><span class="k">UPC</span><span class="v" style="font-weight:500">'+esc(p.upc)+"</span></div>";
+  h+='<div class="kv"><span class="k">Bin</span><span class="v">'+esc(p.bin)+"</span></div>";
+  h+='<div class="kv"><span class="k">Last movement</span><span class="v"'+(p.days>30?' style="color:#C0392B"':"")+">"+
+     (p.days===0?"today":p.days+" days ago")+"</span></div>";
+
+  if(p.ser){
+    h+='<div class="sect">Serial numbers on hand</div>';
+    h+= p.serials.length ? '<div class="sers">'+p.serials.map(function(x){return '<span class="ser">'+esc(x)+"</span>";}).join("")+"</div>"
+                         : '<div class="none">None recorded yet \u2014 they get captured at the dock on receipt.</div>';
+  }
+
+  h+='<div class="sect">Open purchase orders</div>';
+  h+= openPo.length ? openPo.map(function(o){
+        return '<div class="porow"><span><b>'+o.id+"</b> \u00b7 "+esc(o.vend)+"</span><span>"+
+               (o.qty-o.recd)+" of "+o.qty+" outstanding \u00b7 "+esc(o.eta)+"</span></div>"; }).join("")
+      : '<div class="none">Nothing on order.</div>';
+
+  h+='<div class="sect">Recent receipts</div>';
+  h+= recent.length ? recent.map(function(r){
+        return '<div class="porow"><span><b>'+r.qty+"</b> received \u00b7 "+esc(r.when)+"</span><span>"+
+               (r.bol==="none attached"?'<span style="color:#C0392B">no paperwork</span>':"\ud83d\udcc4 "+esc(r.bol))+"</span></div>"; }).join("")
+      : '<div class="none">Nothing received against this part yet.</div>';
+
+  $("rBody").innerHTML=h;
+  $("rBody").scrollTop=0;
+  $("rec").classList.add("on"); $("rec").setAttribute("aria-hidden","false");
+  $("veil").classList.add("on");
+}
+function closeRec(){
+  $("rec").classList.remove("on"); $("rec").setAttribute("aria-hidden","true");
+  $("veil").classList.remove("on");
+}
+$("veil").addEventListener("click",closeRec);
+$("rX").addEventListener("click",closeRec);
+document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeRec(); });
+$("tb").addEventListener("click",function(e){
+  var tr=e.target.closest("tr.prow");
+  if(tr) openRec(tr.getAttribute("data-pn"));
+});
 
 /* ---------- boot ---------- */
 function refresh(){ tiles(); rows(); suggested(); poTable(); fillPoSelect(); recTable(); logView(); owner(); }
