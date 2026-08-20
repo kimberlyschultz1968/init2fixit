@@ -152,6 +152,36 @@
   }
   .whonote{margin-top:8px;font-size:13.5px;max-width:62ch}
 
+  /* see one working */
+  .dlead{max-width:70ch;font-size:14px;margin:-4px 0 0}
+  .fan{position:relative;margin:26px auto 0;max-width:760px;height:330px}
+  .fancard{
+    position:absolute;left:50%;top:0;width:520px;margin-left:-260px;
+    border-radius:10px;overflow:hidden;text-decoration:none;display:block;
+    background:var(--paper);border:1px solid #C9D6EA;
+    box-shadow:0 8px 26px rgba(14,40,120,.20);
+    transition:transform .34s cubic-bezier(.4,0,.2,1),box-shadow .34s;
+    transform-origin:50% 90%;
+  }
+  .fancard img{display:block;width:100%;height:auto}
+  .fancard .ftag{
+    position:absolute;left:0;right:0;bottom:0;padding:19px 14px 9px;
+    font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#fff;
+    background:linear-gradient(180deg,rgba(10,22,52,0),rgba(10,22,52,.82));
+  }
+  .fancard.a{transform:translateX(-15%) rotate(-6deg) scale(.9);z-index:1}
+  .fancard.b{transform:translateY(-6px);z-index:3}
+  .fancard.c{transform:translateX(15%) rotate(6deg) scale(.9);z-index:2}
+  .fan:hover .fancard.a{transform:translateX(-46%) rotate(-8deg) scale(.94)}
+  .fan:hover .fancard.b{transform:translateY(-14px) scale(1.01)}
+  .fan:hover .fancard.c{transform:translateX(46%) rotate(8deg) scale(.94)}
+  .fancard:hover{z-index:9!important;box-shadow:0 16px 44px rgba(14,40,120,.34)}
+  .fan:hover .fancard.a:hover{transform:translateX(-46%) rotate(-3deg) scale(1.02)}
+  .fan:hover .fancard.b:hover{transform:translateY(-20px) scale(1.05)}
+  .fan:hover .fancard.c:hover{transform:translateX(46%) rotate(3deg) scale(1.02)}
+  .dnote{text-align:center;font-size:13px;color:var(--muted);margin-top:14px}
+  .dnote b{color:var(--green-mid)}
+
   /* contact */
   .contact{
     position:relative;overflow:hidden;text-align:center;padding:23px 0;color:#fff;
@@ -176,6 +206,11 @@
   footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
   footer .site{font-weight:700;letter-spacing:.08em}
 
+  @media (max-width:900px){
+    .fan{height:auto;max-width:520px;display:flex;flex-direction:column;gap:14px}
+    .fancard{position:static;left:auto;width:100%;margin-left:0;transform:none!important}
+    .fan:hover .fancard{transform:none!important}
+  }
   @media (max-width:820px){
     .steps{grid-template-columns:1fr}
     .hero{padding:13px 0 14px}
@@ -204,7 +239,7 @@
          No big-company software. No year-long projects. Just your worst process, fixed.</p>
       <div>
         <a class="btn" href="mailto:kimberly@init2fixit.com?subject=Our%20workflow%20headache">Tell us your headache</a>
-        <a class="btn green" href="#how">How it works</a>
+        <a class="btn green" href="#demos">See one working</a>
       </div>
     </div>
   </div>
@@ -261,9 +296,36 @@
     </div>
   </section>
 
-  <section id="who">
+  <section id="demos">
     <div class="wrap">
-      <h2><span class="num chrome-g">03</span>Who we can help</h2>
+      <h2><span class="num chrome-b">03</span>See one working</h2>
+      <p class="dlead">These are not pictures of a product. They are three working demos, built for three
+      different trades, and every one of them is live right now. Click any of them and use it &mdash; check a
+      unit out, close out a stop, receive a delivery. Nothing to install and nothing to sign up for.</p>
+
+      <div class="fan">
+        <a class="fancard a" href="crews/" aria-label="Open the crew board demo">
+          <img src="shots/crews.webp" width="1100" height="615" alt="Crew board &mdash; every property on today&rsquo;s schedule, which crew has it, and the hours against contract budget" loading="lazy">
+          <span class="ftag">Crew board</span>
+        </a>
+        <a class="fancard b" href="board/" aria-label="Open the rental board demo">
+          <img src="shots/board.webp" width="1100" height="615" alt="Rental board &mdash; where every unit is, who has it, what is overdue and what is waiting on service" loading="lazy">
+          <span class="ftag">Rental board</span>
+        </a>
+        <a class="fancard c" href="inventory/" aria-label="Open the parts and inventory demo">
+          <img src="shots/inventory.webp" width="1100" height="615" alt="Parts and inventory &mdash; serialized and non-serialized stock with reorder points, purchase orders and receiving" loading="lazy">
+          <span class="ftag">Parts &amp; inventory</span>
+        </a>
+      </div>
+
+      <p class="dnote">Rental yard &middot; Commercial landscaping &middot; Parts room &nbsp;&mdash;&nbsp;
+      <b>all three are editable, and every change is logged with a name against it.</b></p>
+    </div>
+  </section>
+
+  <section id="who" class="alt">
+    <div class="wrap">
+      <h2><span class="num chrome-g">04</span>Who we can help</h2>
       <div class="whogrid">
         <span class="who">Property management</span>
         <span class="who">HVAC</span>
