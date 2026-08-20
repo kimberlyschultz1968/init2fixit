@@ -207,6 +207,34 @@
   .ctable td:last-child{text-align:right;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
   .ctable td .cs2{display:block;font-size:12px;color:var(--muted)}
 
+  .uhead,.urow{display:grid;grid-template-columns:1.5fr 1.25fr .7fr .8fr .6fr 1.6fr;
+    gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--faint)}
+  .uhead{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:800;color:var(--muted);
+    border-bottom:1px solid var(--line);padding-bottom:6px}
+  .urow:last-of-type{border-bottom:none}
+  .uc b{color:var(--ink);font-weight:700;font-size:13.5px}
+  .uc span{display:block;font-size:11.5px;color:var(--muted)}
+  .ut{font-size:12.5px;color:var(--body);font-variant-numeric:tabular-nums}
+  .un{text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
+  .ugap{color:#B7791F;font-weight:700}
+  .ubarwrap{position:relative;height:20px;background:var(--faint);border-radius:4px;overflow:hidden;
+    font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:800;color:var(--muted)}
+  .uhead .ubarwrap{background:none;height:auto;overflow:visible}
+  .ubar{position:absolute;left:0;top:0;bottom:0;border-radius:4px 0 0 4px}
+  .u-good{background:#2F6B38} .u-mid{background:#B7791F} .u-bad{background:#C0392B}
+  .upct{position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:11px;
+    font-weight:800;color:var(--ink);letter-spacing:0;text-transform:none}
+  .urow.utot{border-top:2px solid var(--line);border-bottom:none;margin-top:2px;padding-top:9px}
+  .urow.utot .un{font-size:14.5px;font-weight:800}
+  .unote{margin-top:13px;font-size:13px;color:var(--body);line-height:1.5}
+  .unote b{color:var(--ink)}
+  .unote2{margin-top:7px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .unote2 b{color:var(--body)}
+  @media (max-width:820px){
+    .uhead{display:none}
+    .urow{grid-template-columns:1fr 1fr;gap:4px 10px}
+  }
+
   .leak{background:linear-gradient(180deg,#FFF9EC,#FFF4DC);border:1px solid #F2DCA6;border-radius:10px;padding:15px 19px;margin-top:10px}
   .leak h3{font-size:15.5px;font-weight:800;color:#8A5B00;margin-bottom:12px}
   .leak .lg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -563,6 +591,13 @@
       </div>
     </div>
 
+    <div class="chartcard" style="margin-top:14px">
+      <h3>Paid time vs time on a property</h3>
+      <div class="cs">Every hour on the clock, and how much of it reached a customer's property. The
+      difference is drive, load, fuel and waiting &mdash; real work that no contract pays for directly.</div>
+      <div id="unbill"></div>
+    </div>
+
     <div class="leak">
       <h3>What's leaking right now</h3>
       <div class="lg">
@@ -804,6 +839,30 @@ function draw(){
   if(flashProp){ setTimeout(function(){ flashProp=null; draw(); },2600); }
 }
 
+var CLOCK={
+ "Crew 1":{lead:"Hector M.", size:3, inT:"6:05 am", outT:"3:40 pm", hours:9.6},
+ "Crew 2":{lead:"Dwayne P.", size:3, inT:"6:10 am", outT:"3:55 pm", hours:9.8},
+ "Crew 3":{lead:"Andre L.",  size:4, inT:"6:00 am", outT:"4:20 pm", hours:10.3},
+ "Crew 4":{lead:"Tomas R.",  size:3, inT:"6:15 am", outT:"3:30 pm", hours:9.3},
+ "Crew 5":{lead:"Nate S.",   size:2, inT:"6:20 am", outT:"2:50 pm", hours:8.5}
+};
+var LOADED_RATE = 26;   // fully loaded cost per crew-hour, demo figure
+
+function premiseByCrew(){
+  var out={};
+  for(var k in CLOCK) out[k]={premise:0, stops:0, open:0};
+  DATA.forEach(function(r){
+    var c=String(r.crew).split(" \u2014 ")[0];
+    if(!out[c]) return;
+    // closed stops use real hours; open ones count at budget, or the number
+    // lies every morning before the crews have finished
+    out[c].premise += (r.hrs>0 ? r.hrs : (r.bud||0));
+    out[c].stops++;
+    if(r.hrs<=0) out[c].open++;
+  });
+  return out;
+}
+
 var ROSTER=["Crew 1 \u2014 Hector M.","Crew 2 \u2014 Dwayne P.","Crew 3 \u2014 Andre L.",
              "Crew 4 \u2014 Tomas R.","Crew 5 \u2014 Nate S."];
 function who(){ var el=document.getElementById("whoami"); return el?el.value.split(" \u2014 ")[0]:"Office"; }
@@ -898,7 +957,7 @@ document.addEventListener("change",function(e){
     if(wasH===nowH) return;
     r.hrs=nowH; r.edited=true; audit(r.prop,"hours",wasH,nowH);
   }
-  draw(); drawTiles();
+  draw(); drawTiles(); drawUnbillable();
 });
 document.addEventListener("click",function(e){
   if(e.target.closest("td.ed")) return;
@@ -991,7 +1050,66 @@ document.getElementById("i-go").onclick=function(){
   fillSelects(); drawTiles(); draw(); drawLog();
 };
 
+function drawUnbillable(){
+  var box=document.getElementById("unbill");
+  if(!box) return;
+  var pb=premiseByCrew();
+  var rows="", totClock=0, totPrem=0;
+  Object.keys(CLOCK).forEach(function(c){
+    var k=CLOCK[c];
+    var clocked = Math.round(k.hours * k.size * 10)/10;   // crew-hours paid
+    var prem    = Math.round(pb[c].premise * 10)/10;      // crew-hours on properties
+    var gap     = Math.round((clocked - prem) * 10)/10;
+    var pct     = clocked>0 ? Math.round(prem/clocked*100) : 0;
+    totClock += clocked; totPrem += prem;
+    var band = pct>=72 ? "u-good" : (pct>=62 ? "u-mid" : "u-bad");
+    rows +=
+      '<div class="urow">'+
+        '<div class="uc"><b>'+c+'</b><span>'+k.lead+" \u00b7 "+k.size+" on the truck</span></div>"+
+        '<div class="ut">'+k.inT+" &ndash; "+k.outT+"</div>"+
+        '<div class="un">'+clocked.toFixed(1)+"</div>"+
+        '<div class="un">'+prem.toFixed(1)+"</div>"+
+        '<div class="un ugap">'+gap.toFixed(1)+"</div>"+
+        '<div class="ubarwrap"><div class="ubar '+band+'" style="width:'+pct+'%"></div>'+
+          '<span class="upct">'+pct+"%</span></div>"+
+      "</div>";
+  });
+  var worst={name:"",pct:100};
+  Object.keys(CLOCK).forEach(function(c){
+    var k=CLOCK[c], cl=k.hours*k.size, pr=pb[c].premise;
+    var pc = cl>0 ? Math.round(pr/cl*100) : 100;
+    if(pc < worst.pct) worst={name:c, pct:pc};
+  });
+  var gapTot = Math.round((totClock-totPrem)*10)/10;
+  var pctTot = Math.round(totPrem/totClock*100);
+  var cost   = Math.round(gapTot*LOADED_RATE);
+  box.innerHTML =
+    '<div class="uhead">'+
+      '<div class="uc">Crew</div><div class="ut">On the clock</div>'+
+      '<div class="un">Paid hrs</div><div class="un">On property</div>'+
+      '<div class="un">Gap</div><div class="ubarwrap">Billable share</div>'+
+    "</div>"+ rows +
+    '<div class="urow utot">'+
+      '<div class="uc"><b>All crews</b></div><div class="ut"></div>'+
+      '<div class="un">'+totClock.toFixed(1)+"</div>"+
+      '<div class="un">'+totPrem.toFixed(1)+"</div>"+
+      '<div class="un ugap">'+gapTot.toFixed(1)+"</div>"+
+      '<div class="ubarwrap"><div class="ubar '+(pctTot>=72?"u-good":(pctTot>=62?"u-mid":"u-bad"))+
+        '" style="width:'+pctTot+'%"></div><span class="upct">'+pctTot+"%</span></div>"+
+    "</div>"+
+    '<p class="unote"><b>'+gapTot.toFixed(1)+" crew-hours</b> were paid for today and never landed on a "+
+    "customer's property &mdash; drive, load, fuel, the dump run, waiting on a gate. At a loaded cost of $"+
+    LOADED_RATE+" an hour that is <b>about $"+cost.toLocaleString("en-US")+" today</b>, or roughly <b>$"+
+    (cost*5*50).toLocaleString("en-US")+" a year</b> across a five-day week.</p>"+
+    '<p class="unote2">Some of this can never be recovered &mdash; trucks have to drive. The point is '+
+    "that you can now see which crew, and which day, is losing the most of it. "+
+    "Stops not yet closed out are counted at their budgeted hours. "+
+    "<b>"+worst.name+" books the smallest share of its paid hours ("+worst.pct+"%)</b>, and that is "+
+    "usually a route problem built in the office, not a crew problem.</p>";
+}
+
 function drawOwner(p){
+  drawUnbillable();
   var d=PER[p],i;
   document.getElementById("h-lab").textContent=d.lab;
   document.getElementById("h-fig").textContent=d.fig;
