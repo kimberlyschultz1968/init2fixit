@@ -182,6 +182,32 @@
   .dnote{text-align:center;font-size:13px;color:var(--muted);margin-top:14px}
   .dnote b{color:var(--green-mid)}
 
+  /* who we can help */
+  .wlead{max-width:72ch;font-size:14px;margin:-4px 0 18px}
+  .trades{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .trade{display:block;text-decoration:none;background:var(--paper);border:1px solid var(--line);
+    border-radius:9px;padding:17px 16px 14px;position:relative;overflow:hidden;
+    box-shadow:0 1px 4px rgba(22,31,49,.06);transition:transform .16s,box-shadow .16s,border-color .16s}
+  .trade::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+  .t-rent::before{background:linear-gradient(90deg,#0F2B8C,#5B93F2,#0F2B8C)}
+  .t-land::before{background:linear-gradient(90deg,#122A16,#4E9A5C,#122A16)}
+  .t-part::before{background:linear-gradient(90deg,#232B38,#8A96AB,#232B38)}
+  .trade:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(22,31,49,.13);border-color:#AFC3E6}
+  .trade .badge{display:inline-block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+    font-weight:800;color:#fff;background:var(--green-mid);border-radius:4px;padding:2px 7px;margin-bottom:7px}
+  .trade h3{font-size:15px;color:var(--ink);font-weight:800;margin-bottom:5px;line-height:1.25}
+  .trade p{font-size:13px;color:var(--body);line-height:1.45}
+  .trade .open{display:block;margin-top:9px;font-size:12.5px;font-weight:700;color:var(--blue)}
+  .trade:hover .open{text-decoration:underline}
+
+  .msub{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;color:var(--muted);
+    margin:26px 0 10px}
+  .more{display:grid;grid-template-columns:1fr 1fr;gap:0 34px}
+  .mrow{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--line-faint);font-size:13.5px;align-items:baseline}
+  .mrow:last-child{border-bottom:none}
+  .mrow b{flex:none;width:156px;color:var(--ink);font-weight:700}
+  .mrow span{color:var(--body);line-height:1.4}
+
   /* contact */
   .contact{
     position:relative;overflow:hidden;text-align:center;padding:23px 0;color:#fff;
@@ -207,6 +233,9 @@
   footer .site{font-weight:700;letter-spacing:.08em}
 
   @media (max-width:900px){
+    .trades{grid-template-columns:1fr}
+    .more{grid-template-columns:1fr}
+    .mrow b{width:130px}
     .fan{height:auto;max-width:520px;display:flex;flex-direction:column;gap:14px}
     .fancard{position:static;left:auto;width:100%;margin-left:0;transform:none!important}
     .fan:hover .fancard{transform:none!important}
@@ -326,19 +355,47 @@
   <section id="who" class="alt">
     <div class="wrap">
       <h2><span class="num chrome-g">04</span>Who we can help</h2>
-      <div class="whogrid">
-        <span class="who">Property management</span>
-        <span class="who">HVAC</span>
-        <span class="who">Plumbing &amp; electrical</span>
-        <span class="who">Contractors &amp; remodelers</span>
-        <span class="who">Landscaping &amp; lawn care</span>
-        <span class="who">Pool service</span>
-        <span class="who">Cleaning &amp; restoration</span>
-        <span class="who">Pest control</span>
-        <span class="who">Auto &amp; marine services</span>
-        <span class="who">Small offices of every kind</span>
+      <p class="wlead">Every one of these runs on a process that somebody is holding together with a
+      spreadsheet, a whiteboard, or their own memory. Three of them already have a working demo you
+      can open right now.</p>
+
+      <div class="trades">
+        <a class="trade t-rent" href="board/">
+          <span class="badge">Live demo</span>
+          <h3>Equipment &amp; event rental</h3>
+          <p>Where every unit is, who has it, what is overdue, and what the yard actually earned this week.</p>
+          <span class="open">Open it &rarr;</span>
+        </a>
+        <a class="trade t-land" href="crews/">
+          <span class="badge">Live demo</span>
+          <h3>Commercial landscaping</h3>
+          <p>Which crew is on which property, hours against the contract, and photo proof a visit happened.</p>
+          <span class="open">Open it &rarr;</span>
+        </a>
+        <a class="trade t-part" href="inventory/">
+          <span class="badge">Live demo</span>
+          <h3>Parts rooms &amp; service shops</h3>
+          <p>Serialized and loose stock with reorder points, purchase orders, and receiving with the paperwork attached.</p>
+          <span class="open">Open it &rarr;</span>
+        </a>
       </div>
-      <p class="whonote">If your business runs on a process — jobs, crews, customers, schedules, invoices — we can probably make it smoother.</p>
+
+      <p class="msub">And the same thing works for</p>
+      <div class="more">
+        <div class="mrow"><b>HVAC</b><span>Dispatch board, service history attached to each unit, and maintenance contracts that come up for renewal on their own.</span></div>
+        <div class="mrow"><b>Plumbing &amp; electrical</b><span>Job scheduling, what is actually on the van, and invoices that go out the same day instead of Saturday.</span></div>
+        <div class="mrow"><b>Contractors &amp; remodelers</b><span>Job costing against the estimate, change orders in writing, and the subcontractor schedule in one place.</span></div>
+        <div class="mrow"><b>Property management</b><span>Work orders, which vendor has them, and the paper trail an owner asks for six months later.</span></div>
+        <div class="mrow"><b>Pool service</b><span>Route sheets, chemical logs, and the reading history for each pool when a customer questions it.</span></div>
+        <div class="mrow"><b>Cleaning &amp; restoration</b><span>Job files, moisture readings, photo documentation, and the insurance paperwork that pays the invoice.</span></div>
+        <div class="mrow"><b>Pest control</b><span>Route scheduling and the applicator record every state inspector eventually asks to see.</span></div>
+        <div class="mrow"><b>Auto &amp; marine service</b><span>Work orders, parts on order holding up a job, and the full history attached to a VIN or hull number.</span></div>
+        <div class="mrow"><b>Trucking &amp; delivery</b><span>Loads, drivers, and the proof-of-delivery paperwork that has to exist before anyone gets paid.</span></div>
+        <div class="mrow"><b>Storage &amp; yards</b><span>What is in which space, who is behind on payment, and what is sitting there earning nothing.</span></div>
+      </div>
+
+      <p class="whonote">Not on the list? The trade matters less than the process. If it involves jobs,
+      crews, customers, stock or paperwork, the problem is usually the same one wearing different overalls.</p>
     </div>
   </section>
 </main>
