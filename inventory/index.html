@@ -277,6 +277,34 @@
     .scroll::-webkit-scrollbar-thumb{background:#AFC3E6;border-radius:6px;border:2px solid #EDF1F8}
     #tbl{width:1180px}
   }
+
+  /* ---- guided walkthrough ---- */
+  .tourbtn{margin-left:10px;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);
+    background:var(--paper);color:var(--muted);font:inherit;font-size:13px;font-weight:800;
+    cursor:pointer;line-height:1;padding:0}
+  .tourbtn:hover{border-color:#4B5566;color:#4B5566}
+  .wspot{position:absolute;border-radius:8px;box-shadow:0 0 0 9999px rgba(11,20,38,.62);
+    z-index:120;pointer-events:none;transition:all .22s cubic-bezier(.4,0,.2,1)}
+  .wtip{position:absolute;z-index:121;width:min(370px,90vw);background:var(--paper);border-radius:10px;
+    box-shadow:0 14px 40px rgba(11,20,38,.4);overflow:hidden}
+  .wtiphead{padding:12px 16px;background:linear-gradient(160deg,#1B2230,#414B5E 58%,#272F3D);color:#fff}
+  .wtiphead .n{font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:800;opacity:.78}
+  .wtiphead h4{font-size:15px;font-weight:800;margin-top:1px}
+  .wtipbody{padding:13px 16px;font-size:13.5px;line-height:1.5;color:var(--body)}
+  .wtipfoot{display:flex;align-items:center;gap:8px;padding:0 16px 14px}
+  .wtipfoot .dots{flex:1;display:flex;gap:4px}
+  .wtipfoot .wdot{width:6px;height:6px;border-radius:50%;background:var(--line)}
+  .wtipfoot .wdot.on{background:#4B5566}
+  .wtipbtn{padding:7px 13px;border:1px solid var(--line);background:var(--paper);border-radius:6px;
+    font:inherit;font-size:12.5px;font-weight:700;color:var(--body);cursor:pointer}
+  .wtipbtn:hover{border-color:#4B5566;color:var(--ink)}
+  .wtipbtn.go2{border-color:#4B5566;background:#4B5566;color:#fff}
+  .wtipbtn.go2:hover{filter:brightness(1.1);color:#fff}
+  .tourhint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;
+    background:rgba(11,20,38,.88);color:#fff;font-size:12.5px;padding:7px 14px;border-radius:20px;
+    box-shadow:0 4px 16px rgba(11,20,38,.3)}
+  .tourhint b{color:#FFD98A}
+  .tourhint.gone{display:none}
 </style>
 </head>
 <body>
@@ -299,6 +327,7 @@
         <option>Sam P. &mdash; manager</option>
       </select>
     </div>
+    <button class="tourbtn" title="Show me around (or press ?)">?</button>
     <span class="co">Parts &amp; Inventory</span>
   </div>
 </header>
@@ -1108,6 +1137,100 @@ refresh();
   window.addEventListener("load",swipeHint);
   setTimeout(swipeHint,120);
   document.addEventListener("click",function(){ setTimeout(swipeHint,80); });
+})();
+</script>
+
+<script>
+/* ---- guided walkthrough: hidden until asked for ---- */
+(function(){
+"use strict";
+var STEPS = [{"tab": 0, "sel": "#tiles", "title": "What is short, at a glance", "pad": 8, "body": "Parts stocked, below minimum, out of stock, on order, and how many are serialized. Click one to filter the list."}, {"tab": 0, "sel": "#tb tr:first-child", "title": "One line per part", "pad": 4, "body": "The bar under the count shows how close that part is to running out. The spine on the left is the status &mdash; green fine, amber below minimum, red at zero."}, {"tab": 0, "sel": "#tb tr:first-child td:nth-child(6)", "title": "Correct a count in place", "pad": 4, "body": "Count on hand, bin and retail price are editable in the row. Fix a count that is wrong and the status, the tiles and the owner numbers all move at once."}, {"tab": 0, "sel": "#tb tr:first-child td:first-child", "title": "Click a part for its record", "pad": 4, "body": "Stock against min and max, cost, margin, vendor, UPC, serial numbers on hand, open purchase orders, and recent receipts with their paperwork."}, {"tab": 1, "sel": "#sugg", "title": "The order builds itself", "pad": 10, "body": "Anything below minimum appears here with the quantity that brings it back to maximum, less whatever is already on order. You approve it, you do not assemble it."}, {"tab": 2, "sel": "#drop", "title": "Attach the bill of lading", "pad": 10, "body": "Receive against the order, enter what actually turned up rather than what was ordered, and attach the paperwork. Three weeks later when the invoice does not match, the proof is already here."}, {"tab": 3, "sel": "#log", "title": "Every order and receipt", "pad": 8, "body": "Who raised it, who received it, how much arrived, and every edit with its old and new value."}, {"tab": 4, "sel": ".leak", "title": "What the shelf is costing", "pad": 10, "body": "Machines down waiting on a part, dead stock nobody has touched in a month, and money committed on orders that have not landed."}];
+var i = -1, spot, tip, busy = false;
+
+function el(sel){ try{ return document.querySelector(sel); }catch(e){ return null; } }
+function tabs(){ return document.querySelectorAll(".tab"); }
+
+function build(){
+  if(spot) return;
+  spot = document.createElement("div"); spot.className="wspot";
+  tip  = document.createElement("div"); tip.className="wtip";
+  document.body.appendChild(spot); document.body.appendChild(tip);
+}
+function place(step){
+  var t = el(step.sel) || document.body;
+  var r = t.getBoundingClientRect();
+  var pad = step.pad===undefined ? 6 : step.pad;
+  var top = r.top + window.scrollY - pad, left = r.left + window.scrollX - pad;
+  var w = r.width + pad*2, h = r.height + pad*2;
+  spot.style.top=top+"px"; spot.style.left=left+"px";
+  spot.style.width=w+"px"; spot.style.height=h+"px";
+
+  tip.style.visibility="hidden"; tip.style.top="0px"; tip.style.left="0px";
+  var th = tip.offsetHeight, tw = tip.offsetWidth;
+  var below = top + h + 12;
+  var fitsBelow = (below + th) < (window.scrollY + window.innerHeight - 10);
+  var ttop = fitsBelow ? below : Math.max(window.scrollY + 10, top - th - 12);
+  var tleft = Math.min(Math.max(10, left + w/2 - tw/2), window.innerWidth - tw - 14);
+  tip.style.top=ttop+"px"; tip.style.left=tleft+"px"; tip.style.visibility="visible";
+
+  var target = Math.max(0, ttop - 90);
+  if(Math.abs(target - window.scrollY) > 40) window.scrollTo({top:target, behavior:"smooth"});
+}
+function show(n){
+  if(n<0||n>=STEPS.length){ return close(); }
+  i = n;
+  var step = STEPS[i];
+  busy = true;
+  if(step.tab!==undefined && tabs()[step.tab]) tabs()[step.tab].click();
+  build();
+  tip.innerHTML =
+    '<div class="wtiphead"><div class="n">Step '+(i+1)+' of '+STEPS.length+'</div><h4>'+step.title+'</h4></div>'+
+    '<div class="wtipbody">'+step.body+'</div>'+
+    '<div class="wtipfoot"><div class="dots">'+
+      STEPS.map(function(_,k){return '<span class="wdot'+(k<=i?" on":"")+'"></span>';}).join("")+
+    '</div>'+
+    (i>0?'<button class="wtipbtn" data-t="back">Back</button>':'')+
+    '<button class="wtipbtn" data-t="end">Close</button>'+
+    '<button class="wtipbtn go2" data-t="next">'+(i===STEPS.length-1?"Done":"Next")+'</button></div>';
+  setTimeout(function(){ place(step); busy = false; }, step.tab!==undefined ? 90 : 0);
+}
+function close(){
+  if(spot){ spot.remove(); tip.remove(); spot=null; tip=null; }
+  i=-1;
+}
+function open(){ if(i<0) show(0); }
+
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-t]");
+  if(b){
+    var a=b.getAttribute("data-t");
+    if(a==="next") show(i+1); else if(a==="back") show(i-1); else close();
+    return;
+  }
+  if(e.target.closest(".tourbtn")){ open(); return; }
+  if(i>=0 && !busy && !e.target.closest(".wtip") && !e.target.closest(".tab")) close();
+});
+document.addEventListener("keydown",function(e){
+  var tag=(e.target.tagName||"").toLowerCase();
+  if(tag==="input"||tag==="select"||tag==="textarea") return;
+  if(e.key==="?"||(e.key==="/"&&e.shiftKey)){ e.preventDefault(); open(); }
+  else if(i>=0){
+    if(e.key==="Escape") close();
+    else if(e.key==="ArrowRight"||e.key==="Enter") show(i+1);
+    else if(e.key==="ArrowLeft") show(i-1);
+  }
+});
+window.addEventListener("resize",function(){ if(i>=0) place(STEPS[i]); });
+
+/* one quiet nudge that this exists, then it never nags again */
+setTimeout(function(){
+  var h=document.createElement("div");
+  h.className="tourhint";
+  h.innerHTML='New here? Press <b>?</b> for a quick walkthrough.';
+  document.body.appendChild(h);
+  setTimeout(function(){ h.classList.add("gone"); }, 9000);
+  h.addEventListener("click",function(){ h.classList.add("gone"); open(); });
+}, 1600);
 })();
 </script>
 </body>

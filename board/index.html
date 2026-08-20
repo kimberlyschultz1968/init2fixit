@@ -276,6 +276,34 @@
     .scroll::-webkit-scrollbar-thumb{background:#AFC3E6;border-radius:6px;border:2px solid #EDF1F8}
     #tbl{width:1080px}
   }
+
+  /* ---- guided walkthrough ---- */
+  .tourbtn{margin-left:10px;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);
+    background:var(--paper);color:var(--muted);font:inherit;font-size:13px;font-weight:800;
+    cursor:pointer;line-height:1;padding:0}
+  .tourbtn:hover{border-color:#1E4FD6;color:#1E4FD6}
+  .wspot{position:absolute;border-radius:8px;box-shadow:0 0 0 9999px rgba(11,20,38,.62);
+    z-index:120;pointer-events:none;transition:all .22s cubic-bezier(.4,0,.2,1)}
+  .wtip{position:absolute;z-index:121;width:min(370px,90vw);background:var(--paper);border-radius:10px;
+    box-shadow:0 14px 40px rgba(11,20,38,.4);overflow:hidden}
+  .wtiphead{padding:12px 16px;background:linear-gradient(160deg,#0E2878,#1E4FD6 60%,#12309B);color:#fff}
+  .wtiphead .n{font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:800;opacity:.78}
+  .wtiphead h4{font-size:15px;font-weight:800;margin-top:1px}
+  .wtipbody{padding:13px 16px;font-size:13.5px;line-height:1.5;color:var(--body)}
+  .wtipfoot{display:flex;align-items:center;gap:8px;padding:0 16px 14px}
+  .wtipfoot .dots{flex:1;display:flex;gap:4px}
+  .wtipfoot .wdot{width:6px;height:6px;border-radius:50%;background:var(--line)}
+  .wtipfoot .wdot.on{background:#1E4FD6}
+  .wtipbtn{padding:7px 13px;border:1px solid var(--line);background:var(--paper);border-radius:6px;
+    font:inherit;font-size:12.5px;font-weight:700;color:var(--body);cursor:pointer}
+  .wtipbtn:hover{border-color:#1E4FD6;color:var(--ink)}
+  .wtipbtn.go2{border-color:#1E4FD6;background:#1E4FD6;color:#fff}
+  .wtipbtn.go2:hover{filter:brightness(1.1);color:#fff}
+  .tourhint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;
+    background:rgba(11,20,38,.88);color:#fff;font-size:12.5px;padding:7px 14px;border-radius:20px;
+    box-shadow:0 4px 16px rgba(11,20,38,.3)}
+  .tourhint b{color:#FFD98A}
+  .tourhint.gone{display:none}
 </style>
 </head>
 <body>
@@ -298,6 +326,7 @@
         <option>Sam P. &mdash; manager</option>
       </select>
     </div>
+    <button class="tourbtn" title="Show me around (or press ?)">?</button>
     <span class="co">Rental Board</span>
   </div>
 </header>
@@ -1019,6 +1048,100 @@ fillSelects(); drawTiles(); draw(); drawLog(); drawOwner("week");
   window.addEventListener("load",swipeHint);
   setTimeout(swipeHint,120);
   document.addEventListener("click",function(){ setTimeout(swipeHint,80); });
+})();
+</script>
+
+<script>
+/* ---- guided walkthrough: hidden until asked for ---- */
+(function(){
+"use strict";
+var STEPS = [{"tab": 0, "sel": "#tiles", "title": "Start with the five numbers", "pad": 8, "body": "Out, due back today, overdue, in for service, ready to go. Click any one of them and the list below filters to just those units. Click it again to come back."}, {"tab": 0, "sel": "#q", "title": "Or just search", "pad": 8, "body": "Type a unit, a customer, a job site or an event. This is the answer to <i>&ldquo;who has my generator?&rdquo;</i> without walking the yard."}, {"tab": 0, "sel": "#rows tr:first-child", "title": "One line per unit", "pad": 4, "body": "The coloured bar down the left tells you the state of that unit before you read a word. Red is overdue, amber is due today, purple is in service, green is ready."}, {"tab": 0, "sel": "#rows tr:first-child td:nth-child(4)", "title": "Change it right here", "pad": 4, "body": "Status, who has it, and the due date are all editable in the row. No separate screen, no form to open. Change one and the tiles above recount straight away."}, {"tab": 0, "sel": ".signas", "title": "Everything you change is signed", "pad": 8, "body": "Whoever is picked here gets their name on every edit. Not to police anybody &mdash; so that when a customer says nobody told them it was due, there is an answer."}, {"tab": 1, "sel": ".formwrap", "title": "The counter desk", "pad": 10, "body": "Checking a unit out captures the customer, the contact, the PO and the job site in one go. Checking it in decides whether it goes back on the available list or straight to the shop."}, {"tab": 2, "sel": "#logbox", "title": "Every move, with a name on it", "pad": 8, "body": "Check-outs, check-ins, and every edit anyone made, showing the old value and the new one. This is the record that settles arguments."}, {"tab": 3, "sel": ".leak", "title": "Where the money leaks", "pad": 10, "body": "Overdue units nobody invoiced, revenue lost to machines sitting in service, and ready units that never went out. <b>Some stuff is overdue</b> is easy to live with. A dollar figure is not."}];
+var i = -1, spot, tip, busy = false;
+
+function el(sel){ try{ return document.querySelector(sel); }catch(e){ return null; } }
+function tabs(){ return document.querySelectorAll(".tab"); }
+
+function build(){
+  if(spot) return;
+  spot = document.createElement("div"); spot.className="wspot";
+  tip  = document.createElement("div"); tip.className="wtip";
+  document.body.appendChild(spot); document.body.appendChild(tip);
+}
+function place(step){
+  var t = el(step.sel) || document.body;
+  var r = t.getBoundingClientRect();
+  var pad = step.pad===undefined ? 6 : step.pad;
+  var top = r.top + window.scrollY - pad, left = r.left + window.scrollX - pad;
+  var w = r.width + pad*2, h = r.height + pad*2;
+  spot.style.top=top+"px"; spot.style.left=left+"px";
+  spot.style.width=w+"px"; spot.style.height=h+"px";
+
+  tip.style.visibility="hidden"; tip.style.top="0px"; tip.style.left="0px";
+  var th = tip.offsetHeight, tw = tip.offsetWidth;
+  var below = top + h + 12;
+  var fitsBelow = (below + th) < (window.scrollY + window.innerHeight - 10);
+  var ttop = fitsBelow ? below : Math.max(window.scrollY + 10, top - th - 12);
+  var tleft = Math.min(Math.max(10, left + w/2 - tw/2), window.innerWidth - tw - 14);
+  tip.style.top=ttop+"px"; tip.style.left=tleft+"px"; tip.style.visibility="visible";
+
+  var target = Math.max(0, ttop - 90);
+  if(Math.abs(target - window.scrollY) > 40) window.scrollTo({top:target, behavior:"smooth"});
+}
+function show(n){
+  if(n<0||n>=STEPS.length){ return close(); }
+  i = n;
+  var step = STEPS[i];
+  busy = true;
+  if(step.tab!==undefined && tabs()[step.tab]) tabs()[step.tab].click();
+  build();
+  tip.innerHTML =
+    '<div class="wtiphead"><div class="n">Step '+(i+1)+' of '+STEPS.length+'</div><h4>'+step.title+'</h4></div>'+
+    '<div class="wtipbody">'+step.body+'</div>'+
+    '<div class="wtipfoot"><div class="dots">'+
+      STEPS.map(function(_,k){return '<span class="wdot'+(k<=i?" on":"")+'"></span>';}).join("")+
+    '</div>'+
+    (i>0?'<button class="wtipbtn" data-t="back">Back</button>':'')+
+    '<button class="wtipbtn" data-t="end">Close</button>'+
+    '<button class="wtipbtn go2" data-t="next">'+(i===STEPS.length-1?"Done":"Next")+'</button></div>';
+  setTimeout(function(){ place(step); busy = false; }, step.tab!==undefined ? 90 : 0);
+}
+function close(){
+  if(spot){ spot.remove(); tip.remove(); spot=null; tip=null; }
+  i=-1;
+}
+function open(){ if(i<0) show(0); }
+
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-t]");
+  if(b){
+    var a=b.getAttribute("data-t");
+    if(a==="next") show(i+1); else if(a==="back") show(i-1); else close();
+    return;
+  }
+  if(e.target.closest(".tourbtn")){ open(); return; }
+  if(i>=0 && !busy && !e.target.closest(".wtip") && !e.target.closest(".tab")) close();
+});
+document.addEventListener("keydown",function(e){
+  var tag=(e.target.tagName||"").toLowerCase();
+  if(tag==="input"||tag==="select"||tag==="textarea") return;
+  if(e.key==="?"||(e.key==="/"&&e.shiftKey)){ e.preventDefault(); open(); }
+  else if(i>=0){
+    if(e.key==="Escape") close();
+    else if(e.key==="ArrowRight"||e.key==="Enter") show(i+1);
+    else if(e.key==="ArrowLeft") show(i-1);
+  }
+});
+window.addEventListener("resize",function(){ if(i>=0) place(STEPS[i]); });
+
+/* one quiet nudge that this exists, then it never nags again */
+setTimeout(function(){
+  var h=document.createElement("div");
+  h.className="tourhint";
+  h.innerHTML='New here? Press <b>?</b> for a quick walkthrough.';
+  document.body.appendChild(h);
+  setTimeout(function(){ h.classList.add("gone"); }, 9000);
+  h.addEventListener("click",function(){ h.classList.add("gone"); open(); });
+}, 1600);
 })();
 </script>
 </body>
