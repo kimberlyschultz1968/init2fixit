@@ -157,7 +157,7 @@
 
   /* see one working */
   .dlead{max-width:70ch;font-size:14px;margin:-4px 0 0}
-  .fan{position:relative;margin:26px auto 0;max-width:760px;height:330px}
+  .fan{position:relative;margin:26px auto 0;max-width:900px;height:305px}
   .fancard{
     position:absolute;left:50%;top:0;width:520px;margin-left:-260px;
     border-radius:10px;overflow:hidden;text-decoration:none;display:block;
@@ -172,16 +172,20 @@
     font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#fff;
     background:linear-gradient(180deg,rgba(10,22,52,0),rgba(10,22,52,.82));
   }
-  .fancard.a{transform:translateX(-15%) rotate(-6deg) scale(.9);z-index:1}
-  .fancard.b{transform:translateY(-6px);z-index:3}
-  .fancard.c{transform:translateX(15%) rotate(6deg) scale(.9);z-index:2}
-  .fan:hover .fancard.a{transform:translateX(-46%) rotate(-8deg) scale(.94)}
-  .fan:hover .fancard.b{transform:translateY(-14px) scale(1.01)}
-  .fan:hover .fancard.c{transform:translateX(46%) rotate(8deg) scale(.94)}
+  .fancard{width:470px;margin-left:-235px}
+  .fancard.a{transform:translateX(-26%) rotate(-7deg) scale(.87);z-index:1}
+  .fancard.b{transform:translateX(-9%) rotate(-2.5deg) scale(.94);z-index:3}
+  .fancard.c{transform:translateX(9%) rotate(2.5deg) scale(.94);z-index:4}
+  .fancard.d{transform:translateX(26%) rotate(7deg) scale(.87);z-index:2}
+  .fan:hover .fancard.a{transform:translateX(-72%) rotate(-9deg) scale(.9)}
+  .fan:hover .fancard.b{transform:translateX(-24%) rotate(-3deg) scale(.96)}
+  .fan:hover .fancard.c{transform:translateX(24%) rotate(3deg) scale(.96)}
+  .fan:hover .fancard.d{transform:translateX(72%) rotate(9deg) scale(.9)}
   .fancard:hover{z-index:9!important;box-shadow:0 16px 44px rgba(14,40,120,.34)}
-  .fan:hover .fancard.a:hover{transform:translateX(-46%) rotate(-3deg) scale(1.02)}
-  .fan:hover .fancard.b:hover{transform:translateY(-20px) scale(1.05)}
-  .fan:hover .fancard.c:hover{transform:translateX(46%) rotate(3deg) scale(1.02)}
+  .fan:hover .fancard.a:hover{transform:translateX(-72%) rotate(-4deg) scale(.99)}
+  .fan:hover .fancard.b:hover{transform:translateX(-24%) rotate(-1deg) scale(1.03)}
+  .fan:hover .fancard.c:hover{transform:translateX(24%) rotate(1deg) scale(1.03)}
+  .fan:hover .fancard.d:hover{transform:translateX(72%) rotate(4deg) scale(.99)}
   .dnote{text-align:center;font-size:13px;color:var(--muted);margin-top:14px}
   .dnote b{color:var(--green-mid)}
 
@@ -348,14 +352,18 @@
           <img src="shots/crews.webp" width="1100" height="615" alt="Crew board &mdash; every property on today&rsquo;s schedule, which crew has it, and the hours against contract budget" loading="lazy">
           <span class="ftag">Crew board</span>
         </a>
-        <a class="fancard c" href="inventory/" aria-label="Open the parts and inventory demo">
+        <a class="fancard c" href="crews/#owner" aria-label="Open the owner&rsquo;s board">
+          <img src="shots/crews-owner.webp" width="1100" height="615" alt="Owner&rsquo;s board &mdash; revenue for the period, hours against budget, and what is leaking with a dollar figure on it" loading="lazy">
+          <span class="ftag">Owner&rsquo;s board</span>
+        </a>
+        <a class="fancard d" href="inventory/" aria-label="Open the parts and inventory demo">
           <img src="shots/inventory.webp" width="1100" height="615" alt="Parts and inventory &mdash; serialized and non-serialized stock with reorder points, purchase orders and receiving" loading="lazy">
           <span class="ftag">Parts &amp; inventory</span>
         </a>
       </div>
 
       <p class="dnote">Rental yard &middot; Commercial landscaping &middot; Parts room &nbsp;&mdash;&nbsp;
-      <b>all three are editable, and every change is logged with a name against it.</b></p>
+      <b>every one is editable, every change is logged with a name against it, and every one has an owner&rsquo;s screen that puts a dollar figure on what is leaking.</b></p>
     </div>
   </section>
 

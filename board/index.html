@@ -1144,5 +1144,21 @@ setTimeout(function(){
 }, 1600);
 })();
 </script>
+
+<script>
+/* deep links: /crews/#owner opens the owner's board directly, so a link in an
+   email can point at one screen instead of "click the fourth tab" */
+(function(){
+  function jump(){
+    var h=(location.hash||"").replace("#","");
+    if(!h) return;
+    var t=document.querySelector('.tab[data-v="'+h+'"]');
+    if(t){ t.click(); window.scrollTo(0,0); }
+  }
+  window.addEventListener("hashchange",jump);
+  if(document.readyState!=="loading") setTimeout(jump,60);
+  else window.addEventListener("DOMContentLoaded",function(){ setTimeout(jump,60); });
+})();
+</script>
 </body>
 </html>
