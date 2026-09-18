@@ -9,18 +9,18 @@
 <style>
   :root{
     --paper:#FFFFFF;
-    --paper-soft:#F5F8FC;
+    --paper-soft:#F5F7FA;
     --ink:#161F31;
     --body:#3C4658;
     --muted:#6B7688;
-    --blue:#1E4FD6;
-    --blue-deep:#12309B;
-    --green:#245229;
-    --green-mid:#2F6B38;
+    --blue:#0066FF;
+    --blue-deep:#003B99;
+    --green:#8B0000;
+    --green-mid:#E00000;
     --line:#D9E0EC;
     --line-faint:#EBEFF6;
     --zebra:#F3F7FD;
-    --hover:#E8F0FE;
+    --hover:#E0F0FF;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -34,18 +34,18 @@
   .wrap{max-width:1080px;margin:0 auto;padding-left:24px;padding-right:24px}
 
   .chrome-b{
-    background:linear-gradient(180deg,#8CBAFF 0%,#3D74E8 30%,#12309B 52%,#5B93F2 66%,#1E4FD6 100%);
+    background:linear-gradient(180deg,#B3D9FF 0%,#33A8FF 30%,#003B99 52%,#33A8FF 66%,#0066FF 100%);
     -webkit-background-clip:text;background-clip:text;
     -webkit-text-fill-color:transparent;color:transparent;
   }
   .chrome-g{
-    background:linear-gradient(180deg,#79BC86 0%,#2F6B38 38%,#16351B 54%,#4E9A5C 68%,#245229 100%);
+    background:linear-gradient(180deg,#FFCCCC 0%,#FF3333 38%,#8B0000 54%,#FF3333 68%,#E00000 100%);
     -webkit-background-clip:text;background-clip:text;
     -webkit-text-fill-color:transparent;color:transparent;
   }
   .chromeline{
     height:2px;border:none;
-    background:linear-gradient(90deg,rgba(30,79,214,0) 0%,#9DB8E8 18%,#1E4FD6 50%,#9DB8E8 82%,rgba(30,79,214,0) 100%);
+    background:linear-gradient(90deg,rgba(0,102,255,0) 0%,#B3D9FF 18%,#0066FF 50%,#B3D9FF 82%,rgba(0,102,255,0) 100%);
   }
 
   header{background:var(--paper)}
@@ -75,9 +75,9 @@
     box-shadow:0 1px 6px rgba(22,31,49,.07);transition:transform .16s,box-shadow .16s,border-color .16s;
   }
   .division::before{content:'';position:absolute;top:0;left:0;right:0;height:6px}
-  .division.biz::before{background:linear-gradient(90deg,#0F2B8C 0%,#5B93F2 50%,#0F2B8C 100%)}
-  .division.tool::before{background:linear-gradient(90deg,#122A16 0%,#4E9A5C 50%,#122A16 100%)}
-  .division:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(22,31,49,.14);border-color:#AFC3E6}
+  .division.biz::before{background:linear-gradient(90deg,#003B99 0%,#33A8FF 50%,#003B99 100%)}
+  .division.tool::before{background:linear-gradient(90deg,#5C0000 0%,#FF3333 50%,#5C0000 100%)}
+  .division:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(22,31,49,.14);border-color:#B3D9FF}
   .division .kicker{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;color:var(--muted);margin-bottom:8px}
   .division h2{color:var(--ink);font-size:19px;font-weight:800;margin-bottom:8px;line-height:1.25}
   .division p{font-size:13.5px;color:var(--body);line-height:1.5}
