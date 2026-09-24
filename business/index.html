@@ -259,6 +259,12 @@
   .formnote a{color:#fff;font-weight:700;text-decoration:underline}
   .formfallback{text-align:center;margin-top:14px;font-size:12.5px;color:#E0F0FF}
   .formfallback a{color:#fff;text-decoration:underline;font-weight:700}
+  .intake-thanks{max-width:640px;margin:22px auto 0;padding:22px 20px;text-align:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);border-radius:10px;box-shadow:0 8px 26px rgba(6,16,60,.25)}
+  .intake-thanks h3{margin:0 0 6px;font-size:clamp(18px,2.4vw,22px);color:#fff}
+  .intake-thanks p{margin:6px 0 0;font-size:14px;color:#E0F0FF}
+  .intake-thanks:focus{outline:none}
+  .intake-error{max-width:640px;margin:12px auto 0;padding:10px 14px;text-align:center;background:#FFF1F1;border:1px solid #F5C2C2;border-radius:8px;color:#7A0000;font-size:13.5px}
+  .intake-error a{color:#7A0000;font-weight:700;text-decoration:underline}
 
   footer{padding:11px 0;background:var(--paper);border-top:1px solid var(--line)}
   footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
@@ -507,6 +513,14 @@
       <p class="formnote">We read every message and reply personally — usually within a day or two.</p>
     </form>
 
+    <div class="intake-thanks" id="intake-thanks" role="status" tabindex="-1" style="display:none">
+      <h3>Thanks &mdash; we&rsquo;ve got it.</h3>
+      <p>We read every message and reply personally, usually within a day or two, at the email address you gave us.</p>
+    </div>
+    <div class="intake-error" id="intake-error" role="alert" style="display:none">
+      That didn&rsquo;t send. Please try again, or email us directly at <a href="mailto:kimberly@init2fixit.com?subject=Our%20workflow%20headache">kimberly@init2fixit.com</a>.
+    </div>
+
     <p class="formfallback">Prefer email? <a href="mailto:kimberly@init2fixit.com?subject=Our%20workflow%20headache">kimberly@init2fixit.com</a></p>
   </div>
 </div>
@@ -517,6 +531,37 @@
     <span class="site chrome-b">INIT2FIXIT.COM</span>
   </div>
 </footer>
+
+<script>
+/* Send the form in the background and show the thank-you on this page,
+   so visitors are not sent away to a Formspree page. If anything about this
+   fails, the form still works the normal way. */
+(function(){
+  var f=document.querySelector('form.intake');
+  if(!f||!window.fetch||!window.FormData) return;
+  var btn=f.querySelector('button[type="submit"]');
+  var thanks=document.getElementById('intake-thanks');
+  var err=document.getElementById('intake-error');
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    err.style.display='none';
+    var label=btn.textContent;
+    btn.disabled=true; btn.textContent='Sending\u2026';
+    fetch(f.action,{method:'POST',body:new FormData(f),headers:{'Accept':'application/json'}})
+      .then(function(r){ if(!r.ok) throw new Error('send failed'); })
+      .then(function(){
+        f.style.display='none';
+        thanks.style.display='block';
+        thanks.focus();
+        thanks.scrollIntoView({block:'center'});
+      })
+      .catch(function(){
+        btn.disabled=false; btn.textContent=label;
+        err.style.display='block';
+      });
+  });
+})();
+</script>
 
 </body>
 </html>
